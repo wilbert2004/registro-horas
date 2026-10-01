@@ -19,22 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const forgotEmail = document.getElementById("forgotEmail");
   const btnForgotSubmit = document.getElementById("btnForgotSubmit");
 
-  // Modal Historial Retroactivo Residencia
-  const modalRetro = document.getElementById("modalRetro");
-  const btnHeaderRetro = document.getElementById("btnHeaderRetro");
-  const btnToolGenerarRetro = document.getElementById("btnToolGenerarRetro");
-  const btnCloseRetro = document.getElementById("btnCloseRetro");
-  const formGenerarRetro = document.getElementById("formGenerarRetro");
-  const retroStartDate = document.getElementById("retroStartDate");
-  const retroEndDate = document.getElementById("retroEndDate");
-  const retroEntry = document.getElementById("retroEntry");
-  const retroExit = document.getElementById("retroExit");
-  const retroLunchStart = document.getElementById("retroLunchStart");
-  const retroLunchEnd = document.getElementById("retroLunchEnd");
-  const retroRandomVariance = document.getElementById("retroRandomVariance");
-  const retroSkipWeekends = document.getElementById("retroSkipWeekends");
-  const btnSubmitRetro = document.getElementById("btnSubmitRetro");
-
   // Modal Día Individual & Incapacidad
   const modalIndividual = document.getElementById("modalIndividual");
   const btnToolAddIndividual = document.getElementById("btnToolAddIndividual");
@@ -50,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const indivLunchStart = document.getElementById("indivLunchStart");
   const indivLunchEnd = document.getElementById("indivLunchEnd");
   const indivDesc = document.getElementById("indivDesc");
-  const sectionTimesContainer = document.getElementById("sectionTimesContainer");
 
   // Modal Meta
   const modalTarget = document.getElementById("modalTarget");
@@ -59,9 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const formTarget = document.getElementById("formTarget");
   const inputTargetHours = document.getElementById("inputTargetHours");
 
-  // Export / Delete Buttons
+  // Export Button
   const btnExportExcel = document.getElementById("btnExportExcel");
-  const btnClearAllLogs = document.getElementById("btnClearAllLogs");
 
   // Auth UI Elements
   const authSection = document.getElementById("authSection");
@@ -127,9 +109,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (clockTime) clockTime.textContent = now.toTimeString().split(' ')[0];
   }
 
-  // Establecer por defecto fecha fin a hoy (1 Oct / actual)
-  if (retroEndDate) retroEndDate.valueAsDate = new Date();
-
   // Cliente Supabase
   const client = getSupabaseClient();
   if (!client) {
@@ -163,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
         id: currentUser.id,
         full_name: currentUser.user_metadata?.full_name || currentUser.email,
         role: currentUser.user_metadata?.role || "practicante",
-        target_hours: 480.0
+        target_hours: 500.0
       };
 
       renderAuthenticatedView();
@@ -294,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function recalculatePracticanteMetrics(logs) {
     let totalWorked = 0;
     let completedDaysSet = new Set();
-    const target = currentProfile?.target_hours || 480.0;
+    const target = currentProfile?.target_hours || 500.0;
 
     logs.forEach(log => {
       const h = Number(log.hours || 0);
@@ -320,7 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tablePracticanteBody.innerHTML = `
         <tr>
           <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
-            No tienes asistencias registradas aún. Presiona el botón <strong>Llenar Residencia (28 Ago - 1 Oct)</strong> arriba para generar tu historial.
+            No tienes asistencias registradas aún. Haz clic en <strong>Registrar / Editar Día</strong> para agregar tu primera jornada.
           </td>
         </tr>`;
     } else {
@@ -470,95 +449,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- GENERADOR DE HISTORIAL RESIDENCIA RETROACTIVO (28 AGO - 1 OCT) CON VARIACIONES REALISTAS ---
-  btnHeaderRetro.addEventListener("click", () => modalRetro.classList.add("open"));
-  btnToolGenerarRetro.addEventListener("click", () => modalRetro.classList.add("open"));
-  btnCloseRetro.addEventListener("click", () => modalRetro.classList.remove("open"));
-
-  formGenerarRetro.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const startDateStr = retroStartDate.value;
-    const endDateStr = retroEndDate.value;
-    const baseEntry = retroEntry.value || "10:00";
-    const baseExit = retroExit.value || "16:30";
-    const baseLunchStart = retroLunchStart.value || "13:00";
-    const baseLunchEnd = retroLunchEnd.value || "14:00";
-    const addVariance = retroRandomVariance.checked;
-    const skipWeekends = retroSkipWeekends.checked;
-
-    if (!startDateStr || !endDateStr) {
-      showToast("Selecciona el rango de fechas.", "warning");
-      return;
-    }
-
-    const start = new Date(startDateStr + "T00:00:00");
-    const end = new Date(endDateStr + "T00:00:00");
-
-    if (start > end) {
-      showToast("La fecha inicial debe ser anterior a la fecha final.", "warning");
-      return;
-    }
-
-    setBtnLoading(btnSubmitRetro, true, "Generando asistencias...");
-
-    const logsToInsert = [];
-    let cur = new Date(start);
-
-    while (cur <= end) {
-      const dayOfWeek = cur.getDay(); // 0 = Dom, 6 = Sáb
-      if (!(skipWeekends && (dayOfWeek === 0 || dayOfWeek === 6))) {
-        const curDateStr = cur.toISOString().split('T')[0];
-
-        let entryT = baseEntry;
-        let exitT = baseExit;
-        let lStartT = baseLunchStart;
-        let lEndT = baseLunchEnd;
-
-        // Si la variación realista está activada:
-        // Entrada alrededor de las 10:00 (entre +0 y +25 minutos) -> ej. 10:05, 10:14, 10:22
-        // Salida alrededor de las 16:30/17:00 (entre -15 y +35 minutos) -> ej. 16:15, 16:45, 17:05
-        if (addVariance) {
-          const entryVarMin = Math.floor(Math.random() * 26); // 0 a 25 min
-          const exitVarMin = Math.floor(Math.random() * 50) - 15; // -15 a +35 min
-          const lunchVarMin = Math.floor(Math.random() * 15); // 0 a 14 min
-
-          entryT = addMinutesToTime(baseEntry, entryVarMin);
-          lStartT = addMinutesToTime(baseLunchStart, lunchVarMin);
-          lEndT = addMinutesToTime(lStartT, 60); // 1 hora de almuerzo
-          exitT = addMinutesToTime(baseExit, exitVarMin);
-        }
-
-        const computed = calculateHoursFromTimes(entryT, lStartT, lEndT, exitT);
-
-        logsToInsert.push({
-          user_id: currentUser.id,
-          date: curDateStr,
-          entry_time: entryT,
-          lunch_start: lStartT,
-          lunch_end: lEndT,
-          exit_time: exitT,
-          hours: computed.hours,
-          extra_hours: computed.extra_hours,
-          status_type: "normal",
-          description: "Residencia profesional"
-        });
-      }
-      cur.setDate(cur.getDate() + 1);
-    }
-
-    const { error } = await client.from("time_logs").upsert(logsToInsert, { onConflict: "user_id, date" });
-    setBtnLoading(btnSubmitRetro, false, "Generar e Insertar");
-
-    if (error) {
-      showToast(`Error al insertar: ${error.message}`, "danger");
-    } else {
-      showToast(`¡Se registraron ${logsToInsert.length} días de residencia con horario flexible realista!`, "success");
-      modalRetro.classList.remove("open");
-      loadPracticanteData();
-    }
-  });
-
   // --- LÓGICA REGISTRAR / EDITAR DÍA INDIVIDUAL O INCAPACIDAD ---
   btnToolAddIndividual.addEventListener("click", () => openIndividualModal("normal"));
   btnToolAddSickLeave.addEventListener("click", () => openIndividualModal("enfermedad"));
@@ -572,9 +462,8 @@ document.addEventListener("DOMContentLoaded", () => {
     indivExit.value = "16:30";
     indivLunchStart.value = "13:00";
     indivLunchEnd.value = "14:00";
-    indivDesc.value = defaultType === "enfermedad" ? "Incapacidad / Reposo médico" : "Residencia profesional";
+    indivDesc.value = defaultType === "enfermedad" ? "Incapacidad por enfermedad / médica" : "Residencia profesional";
 
-    toggleTimesContainer(defaultType);
     modalIndividualTitle.textContent = defaultType === "enfermedad" ? "Registrar Incapacidad / Permiso" : "Registrar Día de Asistencia";
     modalIndividual.classList.add("open");
   }
@@ -589,22 +478,18 @@ document.addEventListener("DOMContentLoaded", () => {
     indivLunchEnd.value = log.lunch_end ? log.lunch_end.substring(0,5) : "14:00";
     indivDesc.value = log.description || "";
 
-    toggleTimesContainer(log.status_type || "normal");
     modalIndividualTitle.textContent = "Editar Registro de Día";
     modalIndividual.classList.add("open");
   }
 
   indivStatusType.addEventListener("change", (e) => {
-    toggleTimesContainer(e.target.value);
-  });
-
-  function toggleTimesContainer(type) {
+    const type = e.target.value;
     if (type === "enfermedad" || type === "permiso" || type === "feriado") {
-      if (indivDesc.value === "Residencia profesional") {
+      if (indivDesc.value === "Residencia profesional" || !indivDesc.value) {
         indivDesc.value = type === "enfermedad" ? "Incapacidad por enfermedad / médica" : "Permiso justificado";
       }
     }
-  }
+  });
 
   btnCloseIndividual.addEventListener("click", () => modalIndividual.classList.remove("open"));
 
@@ -619,17 +504,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const desc = indivDesc.value.trim();
 
     let computed = { hours: 0, extra_hours: 0 };
-    if (statusType === "normal") {
+    if (statusType === "normal" && entryT && exitT) {
       computed = calculateHoursFromTimes(entryT, lStartT, lEndT, exitT);
     }
 
     const payload = {
       user_id: currentUser.id,
       date,
-      entry_time: statusType === "normal" ? entryT : null,
-      lunch_start: statusType === "normal" ? lStartT : null,
-      lunch_end: statusType === "normal" ? lEndT : null,
-      exit_time: statusType === "normal" ? exitT : null,
+      entry_time: statusType === "normal" ? entryT : (entryT || null),
+      lunch_start: statusType === "normal" ? lStartT : (lStartT || null),
+      lunch_end: statusType === "normal" ? lEndT : (lEndT || null),
+      exit_time: statusType === "normal" ? exitT : (exitT || null),
       hours: computed.hours,
       extra_hours: computed.extra_hours,
       status_type: statusType,
@@ -650,7 +535,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- LÓGICA META DE HORAS ---
   btnEditTarget.addEventListener("click", () => {
-    inputTargetHours.value = currentProfile?.target_hours || 480.0;
+    inputTargetHours.value = currentProfile?.target_hours || 500.0;
     modalTarget.classList.add("open");
   });
   btnCloseTarget.addEventListener("click", () => modalTarget.classList.remove("open"));
@@ -671,7 +556,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- EXPORTAR REPORTES Y BORRADO ---
+  // --- EXPORTAR REPORTES ---
   if (inputSearchLogs) {
     inputSearchLogs.addEventListener("input", (e) => {
       const term = e.target.value.toLowerCase().trim();
@@ -711,18 +596,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast("Reporte descargado exitosamente en formato CSV.", "success");
   });
 
-  btnClearAllLogs.addEventListener("click", async () => {
-    if (confirm("⚠️ ¿Estás seguro de borrar TODO el historial de residencia? Esta acción no se puede deshacer.")) {
-      const { error } = await client.from("time_logs").delete().eq("user_id", currentUser.id);
-      if (error) {
-        showToast(`Error al borrar: ${error.message}`, "danger");
-      } else {
-        showToast("Historial borrado por completo.", "info");
-        loadPracticanteData();
-      }
-    }
-  });
-
   // --- VISTA ASESOR EXTERNO ---
   async function loadAsesorData() {
     tableAsesorBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2.5rem;">Cargando resumen de practicantes...</td></tr>`;
@@ -741,7 +614,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       tableAsesorBody.innerHTML = data.map(item => {
         const hours = Number(item.total_hours || 0);
-        const target = Number(item.target_hours || 480.0);
+        const target = Number(item.target_hours || 500.0);
         const percent = Math.min(100, Math.round((hours / target) * 100));
         grandTotal += hours;
 

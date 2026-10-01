@@ -64,13 +64,9 @@ CREATE TABLE IF NOT EXISTS public.time_logs (
   CONSTRAINT unique_user_date UNIQUE (user_id, date)
 );
 
--- Agregar columnas necesarias si la tabla ya existía
-ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS entry_time TIME;
-ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS lunch_start TIME;
-ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS lunch_end TIME;
-ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS exit_time TIME;
-ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS extra_hours NUMERIC(4,2) DEFAULT 0;
-ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS status_type TEXT DEFAULT 'normal';
+-- Corregir restricciones de CHECK en Supabase para permitir 0 horas en entradas activas e incapacidades
+ALTER TABLE public.time_logs DROP CONSTRAINT IF EXISTS time_logs_hours_check;
+ALTER TABLE public.time_logs ADD CONSTRAINT time_logs_hours_check CHECK (hours >= 0);
 
 -- Habilitar RLS en time_logs
 ALTER TABLE public.time_logs ENABLE ROW LEVEL SECURITY;
