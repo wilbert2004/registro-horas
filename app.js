@@ -416,33 +416,56 @@ document.addEventListener("DOMContentLoaded", () => {
   btnPunchSalida.addEventListener("click", () => punchAction("exit"));
 
   async function punchAction(type) {
+    if (!currentUser) {
+      showToast("Debes iniciar sesión para marcar asistencia.", "warning");
+      return;
+    }
+
     const nowTime = new Date().toTimeString().split(' ')[0].substring(0,5);
     const todayStr = new Date().toISOString().split('T')[0];
+
+    let entryT = todayLogEntry?.entry_time || null;
+    let lStartT = todayLogEntry?.lunch_start || null;
+    let lEndT = todayLogEntry?.lunch_end || null;
+    let exitT = todayLogEntry?.exit_time || null;
+
+    if (type === "entry") {
+      entryT = nowTime;
+    } else if (type === "lunch") {
+      lStartT = nowTime;
+      lEndT = addMinutesToTime(nowTime, 60);
+    } else if (type === "exit") {
+      exitT = nowTime;
+    }
+
+    let computed = { hours: 0, extra_hours: 0 };
+    if (entryT && exitT) {
+      computed = calculateHoursFromTimes(entryT, lStartT, lEndT, exitT);
+    }
 
     let payload = {
       user_id: currentUser.id,
       date: todayStr,
-      entry_time: todayLogEntry?.entry_time || (type === "entry" ? nowTime : "10:00"),
-      lunch_start: todayLogEntry?.lunch_start || (type === "lunch" ? nowTime : "13:00"),
-      lunch_end: todayLogEntry?.lunch_end || (type === "lunch" ? "14:00" : "14:00"),
-      exit_time: todayLogEntry?.exit_time || (type === "exit" ? nowTime : "16:30"),
+      entry_time: entryT,
+      lunch_start: lStartT,
+      lunch_end: lEndT,
+      exit_time: exitT,
+      hours: computed.hours,
+      extra_hours: computed.extra_hours,
       status_type: "normal",
-      description: "Residencia profesional (Marcado en tiempo real)"
+      description: "Jornada registrada en tiempo real"
     };
 
-    if (type === "entry") payload.entry_time = nowTime;
-    if (type === "lunch") { payload.lunch_start = nowTime; payload.lunch_end = addMinutesToTime(nowTime, 60); }
-    if (type === "exit") payload.exit_time = nowTime;
+    if (todayLogEntry && todayLogEntry.id) {
+      payload.id = todayLogEntry.id;
+    }
 
-    const computed = calculateHoursFromTimes(payload.entry_time, payload.lunch_start, payload.lunch_end, payload.exit_time);
-    payload.hours = computed.hours;
-    payload.extra_hours = computed.extra_hours;
-
-    const { error } = await client.from("time_logs").upsert(payload, { onConflict: "user_id, date" });
+    const { data, error } = await client.from("time_logs").upsert(payload, { onConflict: "user_id, date" });
     if (error) {
-      showToast(`Error al marcar: ${error.message}`, "danger");
+      showToast(`Error al marcar asistencia: ${error.message}`, "danger");
     } else {
-      showToast(`Marcado exitoso a las ${nowTime}`, "success");
+      const typeLabel = type === "entry" ? "Entrada" : (type === "lunch" ? "Inicio de Almuerzo" : "Salida");
+      showToast(`¡${typeLabel} marcada a las ${nowTime}!`, "success");
       loadPracticanteData();
     }
   }
