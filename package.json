@@ -1,0 +1,15 @@
+{
+  "name": "time-tracker-supabase",
+  "version": "1.0.0",
+  "description": "Esta guía te explica cómo configurar la base de datos en Supabase y conectar tu proyecto estático en JavaScript Vanilla para desplegarlo en Vercel.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pg": "^8.23.1"
+  }
+}

@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HorasTrack Pro | Sistema Inteligente de Horas</title>
+  
+  <!-- Tipografía Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Feather Icons -->
+  <script src="https://unpkg.com/feather-icons"></script>
+  
+  <!-- Supabase JS Client (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg-color: #07090e;
+      --card-bg: rgba(18, 24, 38, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(99, 102, 241, 0.4);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --secondary: #a855f7;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Animated Glow Spots */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.25;
+      animation: floatGlow 14s infinite alternate ease-in-out;
+    }
+
+    body::before {
+      top: -100px;
+      left: -100px;
+      background: radial-gradient(circle, var(--primary), transparent);
+    }
+
+    body::after {
+      bottom: -100px;
+      right: -100px;
+      background: radial-gradient(circle, var(--secondary), transparent);
+      animation-delay: -7s;
+    }
+
+    @keyframes floatGlow {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(60px, 40px) scale(1.15); }
+    }
+
+    header {
+      padding: 1.1rem 2rem;
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      font-weight: 800;
+      font-size: 1.35rem;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-icon {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-name-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .user-display-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .role-badge {
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .role-badge.practicante {
+      background: rgba(99, 102, 241, 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(165, 180, 252, 0.3);
+    }
+
+    .role-badge.asesor {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(110, 231, 183, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+      padding: 0.55rem 1.1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      width: 100%;
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Auth Box */
+    .auth-card {
+      max-width: 450px;
+      margin: 2.5rem auto;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 2rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 0.65rem;
+      text-align: center;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    select.form-control option {
+      background: #0f172a;
+      color: var(--text-main);
+    }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 0.8rem;
+      color: #a5b4fc;
+      text-decoration: none;
+      margin-top: 0.4rem;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+
+    .forgot-link:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px var(--primary-glow);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Stats Grid */
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+      border-color: var(--card-hover-border);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .stat-info h3 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .stat-info p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Progress Bar */
+    .progress-bar-container {
+      margin-top: 0.5rem;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      height: 6px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 10px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Panels */
+    .panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.5s ease-out;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .panel-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      letter-spacing: -0.3px;
+    }
+
+    /* Form Grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 2.2fr auto;
+      gap: 1.25rem;
+      align-items: end;
+    }
+
+    @media (max-width: 820px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Data Table */
+    .table-responsive {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: left;
+    }
+
+    th {
+      padding: 1rem 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.25);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    th:first-child { border-top-left-radius: 10px; }
+    th:last-child { border-top-right-radius: 10px; }
+
+    td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.4);
+      transform: scale(1.02);
+    }
+
+    /* Toast Notifications */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      z-index: 1000;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 480px;
+      padding: 2.25rem;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+      transform: scale(0.95);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.open .modal-content {
+      transform: scale(1);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <i data-feather="clock"></i>
+      </div>
+      <span>HorasTrack <span style="font-weight:400; font-size:0.8rem; color:var(--primary);">PRO</span></span>
+    </div>
+    
+    <div class="user-pill hidden" id="userPill">
+      <div class="user-name-wrapper">
+        <span class="user-display-name" id="userName">Usuario</span>
+        <span class="role-badge" id="userRoleBadge">Practicante</span>
+      </div>
+      <button class="btn-secondary" id="btnLogout">
+        <i data-feather="log-out"></i> Salir
+      </button>
+    </div>
+
+    <button class="btn-secondary" id="btnConfigModal">
+      <i data-feather="settings"></i> Conexión Supabase
+    </button>
+  </header>
+
+  <div class="container">
+
+    <!-- Auth View -->
+    <div id="authSection" class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin">Iniciar Sesión</button>
+        <button class="auth-tab" id="tabRegister">Registrarse</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="formLogin">
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" id="loginEmail" class="form-control" placeholder="tu@correo.com" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+          <a class="forgot-link" id="linkForgotPassword">¿Olvidaste tu contraseña?</a>
+        </div>
+        <button type="submit" class="btn-primary" id="btnLoginSubmit">
+          <i data-feather="log-in"></i> Entrar
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="formRegister" class="hidden">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" id="regName" class="form-control" placeholder="Ej. Juan Pérez" required>
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="tu@correo.com" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="regPassword" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Tipo de Usuario (Rol)</label>
+          <select id="regRole" class="form-control">
+            <option value="practicante">Practicante (Registrar mis horas)</option>
+            <option value="asesor">Asesor Externo (Ver acumulados de practicantes)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" id="btnRegisterSubmit">
+          <i data-feather="user-plus"></i> Crear Cuenta
+        </button>
+      </form>
+    </div>
+
+    <!-- Practicante Dashboard -->
+    <div id="practicanteDashboard" class="hidden">
+      <!-- Stats -->
+      <div class="grid-stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i data-feather="clock"></i>
+          </div>
+          <div class="stat-info" style="width: 100%;">
+            <h3 id="statTotalHoursPracticante">0.0 hrs</h3>
+            <p>Total Horas Acumuladas</p>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="statProgressBar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--secondary); border-color: rgba(168, 85, 247, 0.2);">
+            <i data-feather="file-text"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="statTotalLogsPracticante">0</h3>
+            <p>Registros Realizados</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Registrar Horas -->
+      <div class="panel">
+        <div class="panel-title">
+          <i data-feather="plus-circle" style="color: var(--primary);"></i> Registrar Nueva Entrada de Horas
+        </div>
+        <form id="formAddHours" style="margin-top: 1.25rem;">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" id="logDate" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Horas Trabajaas</label>
+              <input type="number" id="logHours" class="form-control" step="0.25" min="0.25" max="24" placeholder="4.0" required>
+            </div>
+            <div class="form-group">
+              <label>Descripción de Actividades</label>
+              <input type="text" id="logDesc" class="form-control" placeholder="Ej. Desarrollo de componentes y pruebas de UI" required>
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn-primary" id="btnAddHoursSubmit" style="height: 44px;">
+                <i data-feather="check-circle"></i> Guardar
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Historial Table -->
+      <div class="panel">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="panel-title">
+            <i data-feather="list" style="color: var(--secondary);"></i> Mi Historial de Registros
+          </div>
+          <input type="text" id="inputSearchLogs" class="form-control" placeholder="🔍 Buscar por descripción..." style="max-width: 250px; padding: 0.45rem 0.85rem; font-size: 0.85rem;">
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Horas</th>
+                <th>Descripción de Tareas</th>
+                <th style="text-align: right;">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tablePracticanteBody">
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando registros...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Asesor Dashboard -->
+    <div id="asesorDashboard" class="hidden">
+      <!-- Stats Asesor -->
+      <div class="grid-stats">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.2);">
+            <i data-feather="users"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="statTotalPracticantes">0</h3>
+            <p>Practicantes Activos</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border-color: rgba(6, 182, 212, 0.2);">
+            <i data-feather="trending-up"></i>
+          </div>
+          <div class="stat-info">
+            <h3 id="statGrandTotalHours">0.0 hrs</h3>
+            <p>Total Acumulado Global</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla Resumen Asesor -->
+      <div class="panel">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div class="panel-title">
+            <i data-feather="shield-check" style="color: var(--accent-green);"></i> Resumen de Horas Acumuladas por Practicante
+          </div>
+          <span style="font-size: 0.825rem; color: var(--text-muted); background: rgba(255,255,255,0.04); padding: 0.35rem 0.75rem; border-radius: 20px; border: 1px solid var(--card-border);">
+            <i data-feather="lock" style="width: 13px; height: 13px; vertical-align: middle; margin-right: 4px;"></i> Lectura Restringida por RLS
+          </span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Practicante</th>
+                <th style="text-align: right;">Total Horas Acumuladas</th>
+              </tr>
+            </thead>
+            <tbody id="tableAsesorBody">
+              <tr>
+                <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando resumen...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Recuperar Contraseña -->
+  <div class="modal-overlay" id="forgotModal">
+    <div class="modal-content">
+      <div class="panel-title" style="margin-bottom: 0.75rem;">
+        <i data-feather="key" style="color: var(--primary);"></i> Recuperar Contraseña
+      </div>
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Ingresa tu correo electrónico registrado y te enviaremos un enlace seguro para restablecer tu contraseña.
+      </p>
+      <form id="formForgotPass">
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" id="forgotEmail" class="form-control" placeholder="tu@correo.com" required>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn-secondary" style="flex: 1;" id="btnCloseForgot">Cancelar</button>
+          <button type="submit" class="btn-primary" style="flex: 1;" id="btnForgotSubmit">
+            <i data-feather="send"></i> Enviar Enlace
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Config Supabase -->
+  <div class="modal-overlay" id="configModal">
+    <div class="modal-content">
+      <div class="panel-title" style="margin-bottom: 0.75rem;">
+        <i data-feather="settings"></i> Configurar Credenciales Supabase
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Las credenciales actuales provienen de tu proyecto de Supabase activo. Puedes actualizarlas aquí en cualquier momento.
+      </p>
+      <form id="formConfigSupabase">
+        <div class="form-group">
+          <label>Supabase Project URL</label>
+          <input type="url" id="cfgUrl" class="form-control" placeholder="https://xxxx.supabase.co" required>
+        </div>
+        <div class="form-group">
+          <label>Supabase Anon / Public Key</label>
+          <input type="text" id="cfgKey" class="form-control" placeholder="eyJhbGciOi..." required>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn-secondary" style="flex: 1;" id="btnCloseConfig">Cancelar</button>
+          <button type="submit" class="btn-primary" style="flex: 1;">Guardar y Conectar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast">
+    <i data-feather="info" id="toastIcon"></i>
+    <span id="toastMessage">Notificación</span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="supabaseClient.js"></script>
+  <script src="app.js"></script>
+  <script>
+    feather.replace();
+  </script>
+</body>
+</html>
