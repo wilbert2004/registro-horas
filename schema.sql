@@ -47,7 +47,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 
--- 3. Tabla de Registros de Horas (time_logs) con soporte para marcas de tiempo
+-- 3. Tabla de Registros de Horas (time_logs) con soporte para marcas de tiempo y tipo de día
 CREATE TABLE IF NOT EXISTS public.time_logs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS public.time_logs (
   exit_time TIME,
   hours NUMERIC(5,2) NOT NULL DEFAULT 0 CHECK (hours >= 0),
   extra_hours NUMERIC(4,2) DEFAULT 0,
+  status_type TEXT DEFAULT 'normal',
   description TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT unique_user_date UNIQUE (user_id, date)
@@ -69,6 +70,7 @@ ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS lunch_start TIME;
 ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS lunch_end TIME;
 ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS exit_time TIME;
 ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS extra_hours NUMERIC(4,2) DEFAULT 0;
+ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS status_type TEXT DEFAULT 'normal';
 
 -- Habilitar RLS en time_logs
 ALTER TABLE public.time_logs ENABLE ROW LEVEL SECURITY;
