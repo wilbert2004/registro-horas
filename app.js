@@ -1,9 +1,9 @@
 // ========================================================
-// LÓGICA DE LA APLICACIÓN MEJORADA (VANILLA JS)
+// LÓGICA COMPLETA DE HORAS TRACK PRO (VANILLA JS)
 // ========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Config Modal Elements
+  // Config Modal
   const configModal = document.getElementById("configModal");
   const btnConfigModal = document.getElementById("btnConfigModal");
   const btnCloseConfig = document.getElementById("btnCloseConfig");
@@ -11,13 +11,55 @@ document.addEventListener("DOMContentLoaded", () => {
   const cfgUrl = document.getElementById("cfgUrl");
   const cfgKey = document.getElementById("cfgKey");
 
-  // Forgot Password Modal Elements
+  // Forgot Pass Modal
   const forgotModal = document.getElementById("forgotModal");
   const linkForgotPassword = document.getElementById("linkForgotPassword");
   const btnCloseForgot = document.getElementById("btnCloseForgot");
   const formForgotPass = document.getElementById("formForgotPass");
   const forgotEmail = document.getElementById("forgotEmail");
   const btnForgotSubmit = document.getElementById("btnForgotSubmit");
+
+  // Modal Historial Retroactivo
+  const modalRetro = document.getElementById("modalRetro");
+  const btnHeaderRetro = document.getElementById("btnHeaderRetro");
+  const btnToolGenerarRetro = document.getElementById("btnToolGenerarRetro");
+  const btnCloseRetro = document.getElementById("btnCloseRetro");
+  const formGenerarRetro = document.getElementById("formGenerarRetro");
+  const retroStartDate = document.getElementById("retroStartDate");
+  const retroEndDate = document.getElementById("retroEndDate");
+  const retroEntry = document.getElementById("retroEntry");
+  const retroExit = document.getElementById("retroExit");
+  const retroLunchStart = document.getElementById("retroLunchStart");
+  const retroLunchEnd = document.getElementById("retroLunchEnd");
+  const retroSkipWeekends = document.getElementById("retroSkipWeekends");
+  const btnSubmitRetro = document.getElementById("btnSubmitRetro");
+
+  // Modal Día Individual
+  const modalIndividual = document.getElementById("modalIndividual");
+  const btnToolAddIndividual = document.getElementById("btnToolAddIndividual");
+  const btnCloseIndividual = document.getElementById("btnCloseIndividual");
+  const formIndividual = document.getElementById("formIndividual");
+  const modalIndividualTitle = document.getElementById("modalIndividualTitle");
+  const indivId = document.getElementById("indivId");
+  const indivDate = document.getElementById("indivDate");
+  const indivEntry = document.getElementById("indivEntry");
+  const indivExit = document.getElementById("indivExit");
+  const indivLunchStart = document.getElementById("indivLunchStart");
+  const indivLunchEnd = document.getElementById("indivLunchEnd");
+  const indivDesc = document.getElementById("indivDesc");
+
+  // Modal Meta
+  const modalTarget = document.getElementById("modalTarget");
+  const btnEditTarget = document.getElementById("btnEditTarget");
+  const btnCloseTarget = document.getElementById("btnCloseTarget");
+  const formTarget = document.getElementById("formTarget");
+  const inputTargetHours = document.getElementById("inputTargetHours");
+
+  // Export / Backup Buttons
+  const btnExportExcel = document.getElementById("btnExportExcel");
+  const btnBackupJSON = document.getElementById("btnBackupJSON");
+  const fileRestoreJSON = document.getElementById("fileRestoreJSON");
+  const btnClearAllLogs = document.getElementById("btnClearAllLogs");
 
   // Auth UI Elements
   const authSection = document.getElementById("authSection");
@@ -32,23 +74,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const userRoleBadge = document.getElementById("userRoleBadge");
   const btnLogout = document.getElementById("btnLogout");
 
-  // Dashboards
+  // Clock Elements
+  const clockDate = document.getElementById("clockDate");
+  const clockTime = document.getElementById("clockTime");
+  const clockStatusBadge = document.getElementById("clockStatusBadge");
+  const btnPunchEntrada = document.getElementById("btnPunchEntrada");
+  const btnPunchAlmuerzo = document.getElementById("btnPunchAlmuerzo");
+  const btnPunchSalida = document.getElementById("btnPunchSalida");
+  const lblPunchEntrada = document.getElementById("lblPunchEntrada");
+  const lblPunchAlmuerzo = document.getElementById("lblPunchAlmuerzo");
+  const lblPunchSalida = document.getElementById("lblPunchSalida");
+  const lblTodayHours = document.getElementById("lblTodayHours");
+  const lblTodayLunch = document.getElementById("lblTodayLunch");
+  const lblTodayExtra = document.getElementById("lblTodayExtra");
+
+  // Dashboards & Metrics
   const practicanteDashboard = document.getElementById("practicanteDashboard");
   const asesorDashboard = document.getElementById("asesorDashboard");
-
-  // Practicante Elements
-  const formAddHours = document.getElementById("formAddHours");
-  const logDate = document.getElementById("logDate");
-  const logHours = document.getElementById("logHours");
-  const logDesc = document.getElementById("logDesc");
-  const btnAddHoursSubmit = document.getElementById("btnAddHoursSubmit");
-  const tablePracticanteBody = document.getElementById("tablePracticanteBody");
-  const statTotalHoursPracticante = document.getElementById("statTotalHoursPracticante");
-  const statTotalLogsPracticante = document.getElementById("statTotalLogsPracticante");
+  const statWorkedHours = document.getElementById("statWorkedHours");
+  const statTargetHours = document.getElementById("statTargetHours");
+  const statPercentBadge = document.getElementById("statPercentBadge");
   const statProgressBar = document.getElementById("statProgressBar");
+  const statRemainingHours = document.getElementById("statRemainingHours");
+  const statCompletedDays = document.getElementById("statCompletedDays");
+  const tablePracticanteBody = document.getElementById("tablePracticanteBody");
   const inputSearchLogs = document.getElementById("inputSearchLogs");
-
-  // Asesor Elements
   const tableAsesorBody = document.getElementById("tableAsesorBody");
   const statTotalPracticantes = document.getElementById("statTotalPracticantes");
   const statGrandTotalHours = document.getElementById("statGrandTotalHours");
@@ -56,101 +106,38 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentUser = null;
   let currentProfile = null;
   let rawPracticanteLogs = [];
+  let todayLogEntry = null;
 
-  // Reset por defecto a la fecha de hoy
-  resetFormDate();
+  // --- RELOJ EN TIEMPO REAL ---
+  startLiveClock();
 
-  function resetFormDate() {
-    if (logDate) {
-      logDate.valueAsDate = new Date();
+  function startLiveClock() {
+    updateClock();
+    setInterval(updateClock, 1000);
+  }
+
+  function updateClock() {
+    const now = new Date();
+    const days = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
+    const months = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+    
+    if (clockDate) {
+      clockDate.textContent = `${days[now.getDay()]}, ${now.getDate()} DE ${months[now.getMonth()]} DE ${now.getFullYear()}`;
+    }
+    if (clockTime) {
+      clockTime.textContent = now.toTimeString().split(' ')[0];
     }
   }
 
-  // --- 1. MODAL DE CONFIGURACIÓN SUPABASE ---
-  btnConfigModal.addEventListener("click", () => {
-    cfgUrl.value = localStorage.getItem("time_tracker_supabase_url") || SUPABASE_URL;
-    cfgKey.value = localStorage.getItem("time_tracker_supabase_key") || SUPABASE_ANON_KEY;
-    configModal.classList.add("open");
-  });
-
-  btnCloseConfig.addEventListener("click", () => {
-    configModal.classList.remove("open");
-  });
-
-  formConfigSupabase.addEventListener("submit", (e) => {
-    e.preventDefault();
-    localStorage.setItem("time_tracker_supabase_url", cfgUrl.value.trim());
-    localStorage.setItem("time_tracker_supabase_key", cfgKey.value.trim());
-    configModal.classList.remove("open");
-    showToast("Credenciales de Supabase guardadas correctamente. Recargando...", "success");
-    setTimeout(() => location.reload(), 1000);
-  });
-
-  // --- 2. MODAL DE RECUPERAR CONTRASEÑA ---
-  if (linkForgotPassword) {
-    linkForgotPassword.addEventListener("click", (e) => {
-      e.preventDefault();
-      const currentLoginEmail = document.getElementById("loginEmail").value.trim();
-      if (currentLoginEmail) {
-        forgotEmail.value = currentLoginEmail;
-      }
-      forgotModal.classList.add("open");
-    });
+  // Set default End Date to Today for Retro
+  if (retroEndDate) {
+    retroEndDate.valueAsDate = new Date();
   }
 
-  if (btnCloseForgot) {
-    btnCloseForgot.addEventListener("click", () => {
-      forgotModal.classList.remove("open");
-    });
-  }
-
-  if (formForgotPass) {
-    formForgotPass.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = forgotEmail.value.trim();
-      if (!email) return;
-
-      setBtnLoading(btnForgotSubmit, true, "Enviando...");
-
-      try {
-        const { data, error } = await client.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.href
-        });
-
-        if (error) {
-          showToast(`Error: ${error.message}`, "danger");
-        } else {
-          showToast("¡Enlace enviado! Revisa tu bandeja de entrada o carpeta de SPAM.", "success");
-          formForgotPass.reset();
-          forgotModal.classList.remove("open");
-        }
-      } catch (err) {
-        showToast(`Error inesperado: ${err.message}`, "danger");
-      } finally {
-        setBtnLoading(btnForgotSubmit, false, '<i data-feather="send"></i> Enviar Enlace');
-      }
-    });
-  }
-
-  // --- 3. TABS DE AUTH (Login / Registro) ---
-  tabLogin.addEventListener("click", () => {
-    tabLogin.classList.add("active");
-    tabRegister.classList.remove("active");
-    formLogin.classList.remove("hidden");
-    formRegister.classList.add("hidden");
-  });
-
-  tabRegister.addEventListener("click", () => {
-    tabRegister.classList.add("active");
-    tabLogin.classList.remove("active");
-    formRegister.classList.remove("hidden");
-    formLogin.classList.add("hidden");
-  });
-
-  // --- 4. INICIALIZAR SUPABASE & ESCUCHAR ESTADO DE SESIÓN ---
+  // --- CONFIGURACIÓN DE SUPABASE CLIENT ---
   const client = getSupabaseClient();
   if (!client) {
-    showToast("Por favor configura las credenciales de Supabase en el botón superior derecho.", "warning");
+    showToast("Configura tus credenciales de Supabase con el botón ⚙️ en el header.", "warning");
   } else {
     initAuthListener();
   }
@@ -168,7 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Cargar Perfil de Usuario (Rol)
   async function loadUserProfile() {
     try {
       const { data, error } = await client
@@ -177,14 +163,11 @@ document.addEventListener("DOMContentLoaded", () => {
         .eq("id", currentUser.id)
         .single();
 
-      if (error && error.code !== "PGRST116") {
-        console.error("Error al cargar perfil:", error);
-      }
-
       currentProfile = data || {
         id: currentUser.id,
         full_name: currentUser.user_metadata?.full_name || currentUser.email,
-        role: currentUser.user_metadata?.role || "practicante"
+        role: currentUser.user_metadata?.role || "practicante",
+        target_hours: 480.0
       };
 
       renderAuthenticatedView();
@@ -194,7 +177,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- 5. CONTROL DE VISTAS SEGÚN AUTENTICACIÓN Y ROL ---
   function renderUnauthenticatedView() {
     authSection.classList.remove("hidden");
     userPill.classList.add("hidden");
@@ -209,47 +191,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (currentProfile.role === "asesor") {
       userRoleBadge.textContent = "Asesor Externo";
-      userRoleBadge.className = "role-badge asesor";
+      userRoleBadge.className = "header-badge";
+      userRoleBadge.style.background = "rgba(16, 185, 129, 0.2)";
+      userRoleBadge.style.color = "#34d399";
       practicanteDashboard.classList.add("hidden");
       asesorDashboard.classList.remove("hidden");
       loadAsesorData();
     } else {
       userRoleBadge.textContent = "Practicante";
-      userRoleBadge.className = "role-badge practicante";
+      userRoleBadge.className = "header-badge";
       asesorDashboard.classList.add("hidden");
       practicanteDashboard.classList.remove("hidden");
       loadPracticanteData();
     }
   }
 
-  // --- 6. LÓGICA DE AUTENTICACIÓN & FIXES DE RESET DE FORMULARIOS ---
+  // --- AUTENTICACIÓN ---
+  tabLogin.addEventListener("click", () => {
+    tabLogin.classList.add("active");
+    tabRegister.classList.remove("active");
+    formLogin.classList.remove("hidden");
+    formRegister.classList.add("hidden");
+  });
 
-  // Iniciar Sesión
+  tabRegister.addEventListener("click", () => {
+    tabRegister.classList.add("active");
+    tabLogin.classList.remove("active");
+    formRegister.classList.remove("hidden");
+    formLogin.classList.add("hidden");
+  });
+
   formLogin.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
 
-    if (!client) {
-      showToast("Por favor configura primero las credenciales de Supabase.", "warning");
-      return;
-    }
-
     setBtnLoading(btnLoginSubmit, true, "Entrando...");
-
     const { data, error } = await client.auth.signInWithPassword({ email, password });
-    
     setBtnLoading(btnLoginSubmit, false, '<i data-feather="log-in"></i> Entrar');
 
     if (error) {
       showToast(`Error de acceso: ${error.message}`, "danger");
     } else {
-      showToast("¡Inicio de sesión exitoso!", "success");
-      formLogin.reset(); // FIX: Limpiar formulario tras login exitoso
+      showToast("¡Sesión iniciada con éxito!", "success");
+      formLogin.reset();
     }
   });
 
-  // Registro de Usuario
   formRegister.addEventListener("submit", async (e) => {
     e.preventDefault();
     const full_name = document.getElementById("regName").value.trim();
@@ -257,48 +245,39 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = document.getElementById("regPassword").value;
     const role = document.getElementById("regRole").value;
 
-    if (!client) {
-      showToast("Por favor configura primero las credenciales de Supabase.", "warning");
-      return;
-    }
-
     setBtnLoading(btnRegisterSubmit, true, "Creando cuenta...");
-
     const { data, error } = await client.auth.signUp({
       email,
       password,
-      options: {
-        data: { full_name, role }
-      }
+      options: { data: { full_name, role } }
     });
-
     setBtnLoading(btnRegisterSubmit, false, '<i data-feather="user-plus"></i> Crear Cuenta');
 
     if (error) {
-      showToast(`Error de registro: ${error.message}`, "danger");
+      if (error.message.includes("rate limit")) {
+        showToast("Límite de envíos de Supabase alcanzado. Prueba con otro correo o deshabilita la confirmación por email en Supabase Auth.", "danger");
+      } else {
+        showToast(`Error de registro: ${error.message}`, "danger");
+      }
     } else {
-      showToast("¡Cuenta creada exitosamente! Si se requiere verificación de correo, revisa tu bandeja.", "success");
-      formRegister.reset(); // FIX: Limpiar formulario tras registro exitoso
-      
-      // Si el auto-confirm está activo en Supabase, cambiar a pestaña Login
+      showToast("¡Cuenta creada! Puedes iniciar sesión.", "success");
+      formRegister.reset();
       tabLogin.click();
     }
   });
 
-  // Cerrar Sesión
   btnLogout.addEventListener("click", async () => {
     if (client) {
       await client.auth.signOut();
-      formLogin.reset(); // FIX: Limpiar campos de login al salir
-      formRegister.reset(); // FIX: Limpiar campos de registro al salir
-      showToast("Has cerrado sesión correctamente.", "info");
+      formLogin.reset();
+      formRegister.reset();
+      showToast("Sesión cerrada.", "info");
     }
   });
 
-  // --- 7. VISTA PRACTICANTE (Cargar, Filtrar, Agregar y Eliminar Horas) ---
-
+  // --- PRACTICANTE: CARGAR & RECALCULAR MÉTRICAS EN TIEMPO REAL ---
   async function loadPracticanteData() {
-    tablePracticanteBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem;">Cargando tus registros...</td></tr>`;
+    tablePracticanteBody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem;">Cargando historial...</td></tr>`;
 
     const { data, error } = await client
       .from("time_logs")
@@ -306,172 +285,462 @@ document.addEventListener("DOMContentLoaded", () => {
       .order("date", { ascending: false });
 
     if (error) {
-      showToast(`Error al cargar tus horas: ${error.message}`, "danger");
+      showToast(`Error al cargar datos: ${error.message}`, "danger");
       return;
     }
 
     rawPracticanteLogs = data || [];
+    recalculatePracticanteMetrics(rawPracticanteLogs);
     renderPracticanteTable(rawPracticanteLogs);
+    checkTodayPunchStatus();
+  }
+
+  function recalculatePracticanteMetrics(logs) {
+    let totalWorked = 0;
+    let completedDaysSet = new Set();
+    const target = currentProfile?.target_hours || 480.0;
+
+    logs.forEach(log => {
+      const h = Number(log.hours || 0);
+      totalWorked += h;
+      if (h > 0 && log.date) {
+        completedDaysSet.add(log.date);
+      }
+    });
+
+    const remaining = Math.max(0, target - totalWorked);
+    const percent = Math.min(100, Math.round((totalWorked / target) * 100));
+
+    statWorkedHours.textContent = totalWorked.toFixed(1);
+    statTargetHours.textContent = target.toFixed(1);
+    statRemainingHours.textContent = remaining.toFixed(1);
+    statCompletedDays.textContent = completedDaysSet.size;
+    statPercentBadge.textContent = `${percent}%`;
+    if (statProgressBar) statProgressBar.style.width = `${percent}%`;
   }
 
   function renderPracticanteTable(logs) {
-    let totalHours = 0;
     if (logs.length === 0) {
       tablePracticanteBody.innerHTML = `
         <tr>
-          <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
-            No hay registros para mostrar. ¡Agrega tus horas usando el formulario superior!
+          <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+            No tienes días registrados aún. Haz clic en <strong>✨ Rellenar Historial Retroactivo</strong> arriba para generar tus asistencias automáticas.
           </td>
         </tr>`;
     } else {
       tablePracticanteBody.innerHTML = logs.map(item => {
-        totalHours += Number(item.hours);
+        const dateObj = new Date(item.date + "T00:00:00");
+        const daysShort = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+        const dayName = daysShort[dateObj.getDay()];
+
         return `
           <tr>
-            <td><strong>${item.date}</strong></td>
-            <td>
-              <span style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; padding: 0.3rem 0.75rem; border-radius: 20px; font-weight: 700; font-size: 0.9rem;">
-                ${Number(item.hours).toFixed(2)} hrs
-              </span>
-            </td>
-            <td>${escapeHtml(item.description || '-')}</td>
+            <td><strong>${formatDisplayDate(item.date)}</strong></td>
+            <td><span style="color: var(--text-muted); font-weight: 600;">${dayName}</span></td>
+            <td>${item.entry_time ? `<span class="badge-time in">${item.entry_time.substring(0,5)}</span>` : '-'}</td>
+            <td>${item.lunch_start ? `<span class="badge-time lunch">${item.lunch_start.substring(0,5)} - ${item.lunch_end ? item.lunch_end.substring(0,5) : ''}</span>` : '-'}</td>
+            <td>${item.exit_time ? `<span class="badge-time out">${item.exit_time.substring(0,5)}</span>` : '-'}</td>
+            <td><strong style="color: var(--primary);">${formatHoursToHHMM(item.hours)}</strong></td>
+            <td><span style="color: var(--text-muted);">${item.extra_hours ? formatHoursToHHMM(item.extra_hours) : '00:00'}</span></td>
             <td style="text-align: right;">
-              <button class="btn-danger btn-delete-log" data-id="${item.id}">
-                <i data-feather="trash-2" style="width: 14px; height: 14px;"></i> Eliminar
+              <button class="action-icon-btn btn-edit-single" data-id="${item.id}" title="Editar">
+                <i data-feather="edit" style="width: 15px; height: 15px;"></i>
+              </button>
+              <button class="action-icon-btn btn-delete-single" data-id="${item.id}" title="Eliminar" style="color: #f87171;">
+                <i data-feather="trash-2" style="width: 15px; height: 15px;"></i>
               </button>
             </td>
           </tr>
         `;
       }).join("");
 
-      // Listener para botones de eliminar
-      document.querySelectorAll(".btn-delete-log").forEach(btn => {
+      // Action Listeners
+      document.querySelectorAll(".btn-edit-single").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const id = e.currentTarget.getAttribute("data-id");
+          const log = rawPracticanteLogs.find(l => l.id === id);
+          if (log) openEditIndividualModal(log);
+        });
+      });
+
+      document.querySelectorAll(".btn-delete-single").forEach(btn => {
         btn.addEventListener("click", async (e) => {
-          const logId = e.currentTarget.getAttribute("data-id");
-          if (confirm("¿Estás seguro de eliminar este registro de horas?")) {
-            await deleteLogEntry(logId);
+          const id = e.currentTarget.getAttribute("data-id");
+          if (confirm("¿Estás seguro de eliminar este registro?")) {
+            await client.from("time_logs").delete().eq("id", id);
+            showToast("Registro eliminado.", "success");
+            loadPracticanteData();
           }
         });
       });
     }
 
-    // Actualizar métricas y barra de progreso (Meta de 100 horas)
-    statTotalHoursPracticante.textContent = `${totalHours.toFixed(1)} hrs`;
-    statTotalLogsPracticante.textContent = rawPracticanteLogs.length;
-
-    const progressPercent = Math.min(100, (totalHours / 100) * 100);
-    if (statProgressBar) {
-      statProgressBar.style.width = `${progressPercent}%`;
-    }
-
     feather.replace();
   }
 
-  // Filtro de búsqueda en tiempo real
+  // --- BOTONES DE MARCADO DE HOY (Clock Punching) ---
+  function checkTodayPunchStatus() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    todayLogEntry = rawPracticanteLogs.find(l => l.date === todayStr);
+
+    if (todayLogEntry) {
+      lblPunchEntrada.textContent = todayLogEntry.entry_time ? todayLogEntry.entry_time.substring(0,5) : "--:--";
+      lblPunchAlmuerzo.textContent = todayLogEntry.lunch_start ? `${todayLogEntry.lunch_start.substring(0,5)}` : "--:--";
+      lblPunchSalida.textContent = todayLogEntry.exit_time ? todayLogEntry.exit_time.substring(0,5) : "--:--";
+      
+      lblTodayHours.textContent = formatHoursToHHMM(todayLogEntry.hours);
+      lblTodayLunch.textContent = (todayLogEntry.lunch_start && todayLogEntry.lunch_end) ? "01:00" : "00:00";
+      lblTodayExtra.textContent = formatHoursToHHMM(todayLogEntry.extra_hours);
+
+      if (todayLogEntry.entry_time && !todayLogEntry.exit_time) {
+        clockStatusBadge.textContent = "En jornada activa";
+        clockStatusBadge.classList.add("active");
+      } else if (todayLogEntry.exit_time) {
+        clockStatusBadge.textContent = "Jornada completada hoy";
+        clockStatusBadge.classList.remove("active");
+      }
+    } else {
+      lblPunchEntrada.textContent = "--:--";
+      lblPunchAlmuerzo.textContent = "--:--";
+      lblPunchSalida.textContent = "--:--";
+      lblTodayHours.textContent = "00:00";
+      lblTodayLunch.textContent = "00:00";
+      lblTodayExtra.textContent = "00:00";
+      clockStatusBadge.textContent = "Sin jornada activa hoy";
+      clockStatusBadge.classList.remove("active");
+    }
+  }
+
+  btnPunchEntrada.addEventListener("click", () => punchAction("entry"));
+  btnPunchAlmuerzo.addEventListener("click", () => punchAction("lunch"));
+  btnPunchSalida.addEventListener("click", () => punchAction("exit"));
+
+  async function punchAction(type) {
+    const nowTime = new Date().toTimeString().split(' ')[0].substring(0,5);
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    let payload = {
+      user_id: currentUser.id,
+      date: todayStr,
+      entry_time: todayLogEntry?.entry_time || (type === "entry" ? nowTime : "08:00"),
+      lunch_start: todayLogEntry?.lunch_start || (type === "lunch" ? nowTime : "12:00"),
+      lunch_end: todayLogEntry?.lunch_end || (type === "lunch" ? "13:00" : "13:00"),
+      exit_time: todayLogEntry?.exit_time || (type === "exit" ? nowTime : "17:00"),
+      description: "Jornada registrada en tiempo real"
+    };
+
+    if (type === "entry") payload.entry_time = nowTime;
+    if (type === "lunch") { payload.lunch_start = nowTime; payload.lunch_end = addHourToTime(nowTime, 1); }
+    if (type === "exit") payload.exit_time = nowTime;
+
+    // Calcular horas
+    const computed = calculateHoursFromTimes(payload.entry_time, payload.lunch_start, payload.lunch_end, payload.exit_time);
+    payload.hours = computed.hours;
+    payload.extra_hours = computed.extra_hours;
+
+    const { error } = await client.from("time_logs").upsert(payload, { onConflict: "user_id, date" });
+    if (error) {
+      showToast(`Error al marcar: ${error.message}`, "danger");
+    } else {
+      showToast(`Marcado exitoso (${type.toUpperCase()}) a las ${nowTime}`, "success");
+      loadPracticanteData();
+    }
+  }
+
+  // --- LÓGICA DE GENERACIÓN DE HISTORIAL RETROACTIVO (28 AGO - HOY) ---
+  btnHeaderRetro.addEventListener("click", () => modalRetro.classList.add("open"));
+  btnToolGenerarRetro.addEventListener("click", () => modalRetro.classList.add("open"));
+  btnCloseRetro.addEventListener("click", () => modalRetro.classList.remove("open"));
+
+  formGenerarRetro.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const startDateStr = retroStartDate.value;
+    const endDateStr = retroEndDate.value;
+    const entryT = retroEntry.value;
+    const exitT = retroExit.value;
+    const lStartT = retroLunchStart.value;
+    const lEndT = retroLunchEnd.value;
+    const skipWeekends = retroSkipWeekends.checked;
+
+    if (!startDateStr || !endDateStr) {
+      showToast("Selecciona el rango de fechas.", "warning");
+      return;
+    }
+
+    const start = new Date(startDateStr + "T00:00:00");
+    const end = new Date(endDateStr + "T00:00:00");
+
+    if (start > end) {
+      showToast("La fecha de inicio no puede ser posterior a la fecha final.", "warning");
+      return;
+    }
+
+    setBtnLoading(btnSubmitRetro, true, "Generando registros...");
+
+    // Calcular horas por jornada regular
+    const computed = calculateHoursFromTimes(entryT, lStartT, lEndT, exitT);
+
+    const logsToInsert = [];
+    let cur = new Date(start);
+
+    while (cur <= end) {
+      const dayOfWeek = cur.getDay(); // 0 = Dom, 6 = Sáb
+      if (!(skipWeekends && (dayOfWeek === 0 || dayOfWeek === 6))) {
+        const curDateStr = cur.toISOString().split('T')[0];
+        logsToInsert.push({
+          user_id: currentUser.id,
+          date: curDateStr,
+          entry_time: entryT,
+          lunch_start: lStartT,
+          lunch_end: lEndT,
+          exit_time: exitT,
+          hours: computed.hours,
+          extra_hours: computed.extra_hours,
+          description: "Jornada regular de prácticas"
+        });
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    // Inserción masiva mediante upsert
+    const { data, error } = await client.from("time_logs").upsert(logsToInsert, { onConflict: "user_id, date" });
+
+    setBtnLoading(btnSubmitRetro, false, "🚀 Generar e Insertar");
+
+    if (error) {
+      showToast(`Error en inserción masiva: ${error.message}`, "danger");
+    } else {
+      showToast(`¡Se generaron e insertaron ${logsToInsert.length} días de práctica correctamente!`, "success");
+      modalRetro.classList.remove("open");
+      loadPracticanteData();
+    }
+  });
+
+  // --- LÓGICA DÍA INDIVIDUAL ---
+  btnToolAddIndividual.addEventListener("click", () => {
+    formIndividual.reset();
+    indivId.value = "";
+    indivDate.valueAsDate = new Date();
+    indivEntry.value = "08:00";
+    indivExit.value = "17:00";
+    indivLunchStart.value = "12:00";
+    indivLunchEnd.value = "13:00";
+    indivDesc.value = "Jornada regular de prácticas";
+    modalIndividualTitle.textContent = "📅 Añadir Día Individual";
+    modalIndividual.classList.add("open");
+  });
+
+  function openEditIndividualModal(log) {
+    indivId.value = log.id;
+    indivDate.value = log.date;
+    indivEntry.value = log.entry_time ? log.entry_time.substring(0,5) : "08:00";
+    indivExit.value = log.exit_time ? log.exit_time.substring(0,5) : "17:00";
+    indivLunchStart.value = log.lunch_start ? log.lunch_start.substring(0,5) : "12:00";
+    indivLunchEnd.value = log.lunch_end ? log.lunch_end.substring(0,5) : "13:00";
+    indivDesc.value = log.description || "";
+    modalIndividualTitle.textContent = "✏️ Editar Día Individual";
+    modalIndividual.classList.add("open");
+  }
+
+  btnCloseIndividual.addEventListener("click", () => modalIndividual.classList.remove("open"));
+
+  formIndividual.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const date = indivDate.value;
+    const entryT = indivEntry.value;
+    const exitT = indivExit.value;
+    const lStartT = indivLunchStart.value;
+    const lEndT = indivLunchEnd.value;
+    const desc = indivDesc.value.trim();
+
+    const computed = calculateHoursFromTimes(entryT, lStartT, lEndT, exitT);
+
+    const payload = {
+      user_id: currentUser.id,
+      date,
+      entry_time: entryT,
+      lunch_start: lStartT,
+      lunch_end: lEndT,
+      exit_time: exitT,
+      hours: computed.hours,
+      extra_hours: computed.extra_hours,
+      description: desc
+    };
+
+    if (indivId.value) {
+      payload.id = indivId.value;
+    }
+
+    const { error } = await client.from("time_logs").upsert(payload, { onConflict: "user_id, date" });
+    if (error) {
+      showToast(`Error al guardar día: ${error.message}`, "danger");
+    } else {
+      showToast("¡Día guardado correctamente!", "success");
+      modalIndividual.classList.remove("open");
+      loadPracticanteData();
+    }
+  });
+
+  // --- LÓGICA META DE HORAS ---
+  btnEditTarget.addEventListener("click", () => {
+    inputTargetHours.value = currentProfile?.target_hours || 480.0;
+    modalTarget.classList.add("open");
+  });
+  btnCloseTarget.addEventListener("click", () => modalTarget.classList.remove("open"));
+
+  formTarget.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const newTarget = parseFloat(inputTargetHours.value);
+    if (!newTarget || newTarget <= 0) return;
+
+    const { error } = await client.from("profiles").update({ target_hours: newTarget }).eq("id", currentUser.id);
+    if (error) {
+      showToast(`Error al actualizar meta: ${error.message}`, "danger");
+    } else {
+      currentProfile.target_hours = newTarget;
+      showToast("¡Meta de horas actualizada!", "success");
+      modalTarget.classList.remove("open");
+      recalculatePracticanteMetrics(rawPracticanteLogs);
+    }
+  });
+
+  // --- BUSCADOR Y EXPORTAR EXCEL / RESPALDO JSON ---
   if (inputSearchLogs) {
     inputSearchLogs.addEventListener("input", (e) => {
       const term = e.target.value.toLowerCase().trim();
       if (!term) {
         renderPracticanteTable(rawPracticanteLogs);
       } else {
-        const filtered = rawPracticanteLogs.filter(log =>
-          (log.description && log.description.toLowerCase().includes(term)) ||
-          (log.date && log.date.includes(term))
+        const filtered = rawPracticanteLogs.filter(l =>
+          (l.date && l.date.includes(term)) ||
+          (l.description && l.description.toLowerCase().includes(term))
         );
         renderPracticanteTable(filtered);
       }
     });
   }
 
-  // Registrar nueva entrada de horas (FIX: Limpiar formulario tras guardar)
-  formAddHours.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const date = logDate.value;
-    const hours = parseFloat(logHours.value);
-    const description = logDesc.value.trim();
-
-    if (!date || isNaN(hours) || hours <= 0 || !description) {
-      showToast("Por favor completa todos los campos correctamente.", "warning");
+  btnExportExcel.addEventListener("click", () => {
+    if (rawPracticanteLogs.length === 0) {
+      showToast("No hay registros para exportar.", "warning");
       return;
     }
 
-    setBtnLoading(btnAddHoursSubmit, true, "Guardando...");
+    let csvContent = "\uFEFFFecha,Día,Entrada,Inicio Almuerzo,Fin Almuerzo,Salida,Horas Totales,Horas Extra,Descripción\n";
+    const daysShort = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-    const { data, error } = await client.from("time_logs").insert([
-      {
-        user_id: currentUser.id,
-        date,
-        hours,
-        description
+    rawPracticanteLogs.forEach(l => {
+      const d = new Date(l.date + "T00:00:00");
+      const dayName = daysShort[d.getDay()];
+      csvContent += `"${l.date}","${dayName}","${l.entry_time || ''}","${l.lunch_start || ''}","${l.lunch_end || ''}","${l.exit_time || ''}","${l.hours}","${l.extra_hours || 0}","${(l.description || '').replace(/"/g, '""')}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Reporte_Horas_Practicas_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    showToast("Reporte descargado en formato CSV Excel.", "success");
+  });
+
+  btnBackupJSON.addEventListener("click", () => {
+    const jsonStr = JSON.stringify(rawPracticanteLogs, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Respaldo_Horas_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    showToast("Respaldo de seguridad JSON descargado.", "success");
+  });
+
+  fileRestoreJSON.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const logs = JSON.parse(event.target.result);
+        if (Array.isArray(logs)) {
+          const payload = logs.map(l => ({
+            user_id: currentUser.id,
+            date: l.date,
+            entry_time: l.entry_time,
+            lunch_start: l.lunch_start,
+            lunch_end: l.lunch_end,
+            exit_time: l.exit_time,
+            hours: l.hours,
+            extra_hours: l.extra_hours || 0,
+            description: l.description || "Restaurado de respaldo JSON"
+          }));
+
+          const { error } = await client.from("time_logs").upsert(payload, { onConflict: "user_id, date" });
+          if (error) {
+            showToast(`Error al restaurar: ${error.message}`, "danger");
+          } else {
+            showToast(`¡Se restauraron ${payload.length} registros exitosamente!`, "success");
+            loadPracticanteData();
+          }
+        }
+      } catch (err) {
+        showToast("Archivo JSON no válido.", "danger");
       }
-    ]);
+    };
+    reader.readAsText(file);
+  });
 
-    setBtnLoading(btnAddHoursSubmit, false, '<i data-feather="check-circle"></i> Guardar');
-
-    if (error) {
-      showToast(`Error al guardar horas: ${error.message}`, "danger");
-    } else {
-      showToast("¡Registro de horas guardado exitosamente!", "success");
-      
-      // FIX CRÍTICO: Limpiar el formulario y resetear la fecha a la de hoy
-      formAddHours.reset();
-      resetFormDate();
-
-      loadPracticanteData();
+  btnClearAllLogs.addEventListener("click", async () => {
+    if (confirm("⚠️ ¿ATENCIÓN: Estás seguro de borrar TODO tu historial de prácticas? Esta acción no se puede deshacer.")) {
+      const { error } = await client.from("time_logs").delete().eq("user_id", currentUser.id);
+      if (error) {
+        showToast(`Error al borrar: ${error.message}`, "danger");
+      } else {
+        showToast("Historial borrado por completo.", "info");
+        loadPracticanteData();
+      }
     }
   });
 
-  // Eliminar registro
-  async function deleteLogEntry(logId) {
-    const { error } = await client.from("time_logs").delete().eq("id", logId);
-    if (error) {
-      showToast(`Error al eliminar: ${error.message}`, "danger");
-    } else {
-      showToast("Registro eliminado con éxito.", "success");
-      loadPracticanteData();
-    }
-  }
-
-  // --- 8. VISTA ASESOR EXTERNO (Resumen por Practicante) ---
-
+  // --- VISTA ASESOR EXTERNO ---
   async function loadAsesorData() {
-    tableAsesorBody.innerHTML = `<tr><td colspan="2" style="text-align: center; padding: 2.5rem;">Cargando resumen de practicantes...</td></tr>`;
+    tableAsesorBody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2.5rem;">Cargando resumen de practicantes...</td></tr>`;
 
     const { data, error } = await client.rpc("get_totals_per_practicante");
 
     if (error) {
-      showToast(`Error al obtener resumen de practicantes: ${error.message}`, "danger");
-      tableAsesorBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--accent-red); padding: 2rem;">Error de permisos o función RPC no encontrada en Supabase.</td></tr>`;
+      showToast(`Error en RPC Asesor: ${error.message}`, "danger");
+      tableAsesorBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--accent-red);">No se pudo cargar el resumen. Verifica los permisos de RLS.</td></tr>`;
       return;
     }
 
     let grandTotal = 0;
     if (!data || data.length === 0) {
-      tableAsesorBody.innerHTML = `
-        <tr>
-          <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
-            No hay ningún practicante registrado en el sistema.
-          </td>
-        </tr>`;
+      tableAsesorBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">No hay practicantes registrados aún.</td></tr>`;
     } else {
       tableAsesorBody.innerHTML = data.map(item => {
         const hours = Number(item.total_hours || 0);
+        const target = Number(item.target_hours || 480.0);
+        const percent = Math.min(100, Math.round((hours / target) * 100));
         grandTotal += hours;
+
         return `
           <tr>
             <td>
-              <div style="display: flex; align-items: center; gap: 0.85rem;">
-                <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 10px var(--primary-glow);">
-                  ${item.full_name ? item.full_name.charAt(0).toUpperCase() : 'P'}
+              <strong style="font-size: 0.95rem; color: var(--text-main);">${escapeHtml(item.full_name || 'Practicante')}</strong>
+            </td>
+            <td><span style="font-weight: 700; color: #34d399;">${item.completed_days || 0} días</span></td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div class="progress-bar-bg" style="width: 120px; margin: 0;">
+                  <div class="progress-bar-fill" style="width: ${percent}%;"></div>
                 </div>
-                <div>
-                  <strong style="font-size: 1rem; color: var(--text-main);">${escapeHtml(item.full_name || 'Practicante')}</strong>
-                </div>
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">${percent}%</span>
               </div>
             </td>
             <td style="text-align: right;">
-              <span style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.4rem 0.9rem; border-radius: 20px; font-weight: 800; font-size: 0.95rem;">
-                ${hours.toFixed(2)} hrs acumuladas
+              <span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.35rem 0.8rem; border-radius: 20px; font-weight: 800;">
+                ${hours.toFixed(2)} hrs
               </span>
             </td>
           </tr>
@@ -480,11 +749,57 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     statTotalPracticantes.textContent = data ? data.length : 0;
-    statGrandTotalHours.textContent = `${grandTotal.toFixed(1)} hrs`;
+    statGrandTotalHours.textContent = `${grandTotal.toFixed(1)}`;
     feather.replace();
   }
 
-  // --- UTILIDADES (Loading en Botones, Toast & Escape HTML) ---
+  // --- UTILIDADES ---
+  function calculateHoursFromTimes(entry, lunchStart, lunchEnd, exit) {
+    if (!entry || !exit) return { hours: 0, extra_hours: 0 };
+
+    const parseMinutes = (timeStr) => {
+      const [h, m] = timeStr.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    const entryM = parseMinutes(entry);
+    const exitM = parseMinutes(exit);
+    let totalM = exitM - entryM;
+
+    if (lunchStart && lunchEnd) {
+      const lStartM = parseMinutes(lunchStart);
+      const lEndM = parseMinutes(lunchEnd);
+      const lunchM = lEndM - lStartM;
+      if (lunchM > 0) totalM -= lunchM;
+    }
+
+    const hours = Math.max(0, totalM / 60);
+    const extra_hours = hours > 8.0 ? (hours - 8.0) : 0;
+
+    return {
+      hours: Number(hours.toFixed(2)),
+      extra_hours: Number(extra_hours.toFixed(2))
+    };
+  }
+
+  function formatHoursToHHMM(decimalHours) {
+    if (!decimalHours || decimalHours <= 0) return "00:00";
+    const hrs = Math.floor(decimalHours);
+    const mins = Math.round((decimalHours - hrs) * 60);
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  }
+
+  function addHourToTime(timeStr, addHours) {
+    const [h, m] = timeStr.split(':').map(Number);
+    const newH = (h + addHours) % 24;
+    return `${String(newH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  function formatDisplayDate(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+  }
 
   function setBtnLoading(btn, isLoading, originalHtml) {
     if (!btn) return;

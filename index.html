@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HorasTrack Pro | Sistema Inteligente de Horas</title>
+  <title>Prácticas Profesionales | Control de Horas</title>
   
-  <!-- Tipografía Google Fonts: Plus Jakarta Sans & Outfit -->
+  <!-- Tipografías Google Fonts: Plus Jakarta Sans & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Feather Icons -->
   <script src="https://unpkg.com/feather-icons"></script>
@@ -18,17 +18,22 @@
 
   <style>
     :root {
-      --bg-color: #07090e;
-      --card-bg: rgba(18, 24, 38, 0.75);
+      --bg-color: #090d16;
+      --card-bg: #111827;
+      --card-bg-gradient: linear-gradient(180deg, rgba(23, 31, 48, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
       --card-border: rgba(255, 255, 255, 0.08);
       --card-hover-border: rgba(99, 102, 241, 0.4);
       --primary: #6366f1;
       --primary-hover: #4f46e5;
-      --primary-glow: rgba(99, 102, 241, 0.35);
-      --secondary: #a855f7;
-      --accent-cyan: #06b6d4;
+      --primary-glow: rgba(99, 102, 241, 0.3);
+      --secondary: #8b5cf6;
       --accent-green: #10b981;
+      --accent-green-bg: rgba(16, 185, 129, 0.15);
+      --accent-amber: #d97706;
+      --accent-amber-bg: rgba(217, 119, 6, 0.15);
       --accent-red: #ef4444;
+      --accent-red-bg: rgba(239, 68, 68, 0.15);
+      --accent-cyan: #06b6d4;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --font-family: 'Plus Jakarta Sans', sans-serif;
@@ -48,44 +53,15 @@
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
-      position: relative;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
     }
 
-    /* Ambient Animated Glow Spots */
-    body::before, body::after {
-      content: '';
-      position: fixed;
-      width: 450px;
-      height: 450px;
-      border-radius: 50%;
-      filter: blur(120px);
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.25;
-      animation: floatGlow 14s infinite alternate ease-in-out;
-    }
-
-    body::before {
-      top: -100px;
-      left: -100px;
-      background: radial-gradient(circle, var(--primary), transparent);
-    }
-
-    body::after {
-      bottom: -100px;
-      right: -100px;
-      background: radial-gradient(circle, var(--secondary), transparent);
-      animation-delay: -7s;
-    }
-
-    @keyframes floatGlow {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(60px, 40px) scale(1.15); }
-    }
-
+    /* Header */
     header {
       padding: 1.1rem 2rem;
-      background: rgba(7, 9, 14, 0.85);
+      background: rgba(9, 13, 22, 0.9);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--card-border);
@@ -97,70 +73,57 @@
       z-index: 50;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      font-weight: 800;
-      font-size: 1.35rem;
-      color: var(--text-main);
-      letter-spacing: -0.5px;
-    }
-
-    .brand-icon {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      box-shadow: 0 0 20px var(--primary-glow);
-    }
-
-    .user-pill {
+    .brand-group {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
 
-    .user-name-wrapper {
+    .brand-icon {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 0 15px var(--primary-glow);
     }
 
-    .user-display-name {
-      font-weight: 700;
-      font-size: 0.95rem;
+    .brand-titles h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
 
-    .role-badge {
-      padding: 0.2rem 0.65rem;
+    .brand-titles p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .header-badge {
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      border: 1px solid rgba(165, 180, 252, 0.3);
+      padding: 0.2rem 0.6rem;
       border-radius: 20px;
       font-size: 0.7rem;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
     }
 
-    .role-badge.practicante {
-      background: rgba(99, 102, 241, 0.15);
-      color: #a5b4fc;
-      border: 1px solid rgba(165, 180, 252, 0.3);
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 
-    .role-badge.asesor {
-      background: rgba(16, 185, 129, 0.15);
-      color: #6ee7b7;
-      border: 1px solid rgba(110, 231, 183, 0.3);
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
-      border: 1px solid var(--card-border);
+    /* Buttons */
+    .btn {
       padding: 0.55rem 1.1rem;
       border-radius: 10px;
       cursor: pointer;
@@ -169,42 +132,72 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border-color: var(--card-border);
     }
 
     .btn-secondary:hover {
       background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
       transform: translateY(-1px);
     }
 
+    .btn-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+
+    .btn-success:hover {
+      background: rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* Container */
     .container {
-      max-width: 1150px;
-      margin: 2rem auto;
+      max-width: 1250px;
+      margin: 1.75rem auto;
       padding: 0 1.5rem;
       width: 100%;
       flex: 1;
-      position: relative;
-      z-index: 1;
     }
 
-    /* Auth Box */
+    /* Auth Card */
     .auth-card {
-      max-width: 450px;
-      margin: 2.5rem auto;
+      max-width: 440px;
+      margin: 3rem auto;
       background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--card-border);
       border-radius: 20px;
       padding: 2.5rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      animation: fadeInUp 0.4s ease-out;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
     }
 
     .auth-tabs {
@@ -233,7 +226,6 @@
     .auth-tab.active {
       color: white;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
-      box-shadow: 0 4px 12px var(--primary-glow);
     }
 
     .form-group {
@@ -251,7 +243,7 @@
     .form-control {
       width: 100%;
       padding: 0.75rem 1rem;
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--card-border);
       border-radius: 10px;
       color: var(--text-main);
@@ -262,7 +254,6 @@
 
     .form-control:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-light);
     }
 
     select.form-control option {
@@ -277,100 +268,97 @@
       color: #a5b4fc;
       text-decoration: none;
       margin-top: 0.4rem;
-      transition: color 0.2s;
       cursor: pointer;
     }
 
-    .forgot-link:hover {
-      color: var(--primary);
-      text-decoration: underline;
-    }
-
-    .btn-primary {
-      width: 100%;
-      padding: 0.85rem;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: 0 4px 15px var(--primary-glow);
-    }
-
-    .btn-primary:hover {
-      opacity: 0.95;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px var(--primary-glow);
-    }
-
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-
-    /* Stats Grid */
-    .grid-stats {
+    /* Top Metrics Grid */
+    .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-      animation: fadeInUp 0.4s ease-out;
+      grid-template-columns: 2.2fr 1.4fr 1.4fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
     }
 
-    .stat-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
+    @media (max-width: 900px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-card {
+      background: var(--card-bg-gradient);
       border: 1px solid var(--card-border);
       border-radius: 16px;
       padding: 1.5rem;
       display: flex;
-      align-items: center;
-      gap: 1.25rem;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
     }
 
-    .stat-card:hover {
-      border-color: var(--card-hover-border);
-      transform: translateY(-4px);
-      box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4);
-    }
-
-    .stat-icon {
-      width: 54px;
-      height: 54px;
-      border-radius: 14px;
+    .metric-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      background: rgba(99, 102, 241, 0.15);
-      color: #818cf8;
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      margin-bottom: 0.75rem;
     }
 
-    .stat-info h3 {
-      font-size: 1.85rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
-    .stat-info p {
-      font-size: 0.85rem;
+    .metric-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
       color: var(--text-muted);
-      font-weight: 500;
     }
 
-    /* Progress Bar */
-    .progress-bar-container {
-      margin-top: 0.5rem;
+    .btn-edit-target {
+      font-size: 0.75rem;
+      color: #a5b4fc;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .btn-edit-target:hover {
+      text-decoration: underline;
+    }
+
+    .metric-main {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+
+    .metric-value-big {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .metric-sub {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .metric-pill {
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .progress-bar-bg {
+      margin-top: 1rem;
       width: 100%;
+      height: 8px;
       background: rgba(255, 255, 255, 0.08);
-      height: 6px;
       border-radius: 10px;
       overflow: hidden;
     }
@@ -379,60 +367,270 @@
       height: 100%;
       background: linear-gradient(90deg, var(--primary), var(--secondary));
       border-radius: 10px;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 0.5s ease;
     }
 
-    /* Panels */
-    .panel {
-      background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 1.75rem;
-      margin-bottom: 2rem;
-      animation: fadeInUp 0.5s ease-out;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-
-    .panel-title {
-      font-size: 1.15rem;
-      font-weight: 700;
+    .metric-card-stat {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      letter-spacing: -0.3px;
+      justify-content: space-between;
     }
 
-    /* Form Grid */
-    .form-grid {
+    .metric-icon-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    /* Main Dashboard Layout Grid */
+    .dashboard-layout {
       display: grid;
-      grid-template-columns: 1.2fr 1fr 2.2fr auto;
-      gap: 1.25rem;
-      align-items: end;
+      grid-template-columns: 2.2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
-    @media (max-width: 820px) {
-      .form-grid {
+    @media (max-width: 990px) {
+      .dashboard-layout {
         grid-template-columns: 1fr;
       }
     }
 
-    /* Data Table */
+    .panel-box {
+      background: var(--card-bg-gradient);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 1.5rem;
+    }
+
+    /* Clock Panel */
+    .clock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .date-display {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .time-display {
+      font-size: 2.75rem;
+      font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      letter-spacing: 1px;
+      margin-top: 0.2rem;
+    }
+
+    .status-badge-clock {
+      padding: 0.35rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+    }
+
+    .status-badge-clock.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+
+    /* Big Punch Buttons */
+    .punch-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    @media (max-width: 650px) {
+      .punch-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .punch-card {
+      border-radius: 14px;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .punch-card.entrada {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    .punch-card.entrada:hover {
+      background: rgba(16, 185, 129, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .punch-card.almuerzo {
+      background: rgba(217, 119, 6, 0.15);
+      border-color: rgba(217, 119, 6, 0.3);
+      color: #fbbf24;
+    }
+
+    .punch-card.almuerzo:hover {
+      background: rgba(217, 119, 6, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .punch-card.salida {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .punch-card.salida:hover {
+      background: rgba(239, 68, 68, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .punch-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .punch-time {
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0.8;
+    }
+
+    /* Day Stats Row */
+    .day-stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 0.85rem;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid var(--card-border);
+    }
+
+    .day-stat-item p {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .day-stat-item h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-top: 0.2rem;
+    }
+
+    /* Quick Tools Side Panel */
+    .tools-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tool-item-btn {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      color: var(--text-main);
+      font-weight: 600;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .tool-item-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateX(2px);
+    }
+
+    .backup-group {
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .backup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Table Section */
+    .table-panel {
+      background: var(--card-bg-gradient);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 1.5rem;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .table-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
     .table-responsive {
       overflow-x: auto;
-      margin-top: 1rem;
     }
 
     table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+      border-collapse: collapse;
       text-align: left;
     }
 
     th {
-      padding: 1rem 1.25rem;
+      padding: 0.85rem 1rem;
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
@@ -442,46 +640,77 @@
       border-bottom: 1px solid var(--card-border);
     }
 
-    th:first-child { border-top-left-radius: 10px; }
-    th:last-child { border-top-right-radius: 10px; }
-
     td {
-      padding: 1rem 1.25rem;
+      padding: 0.9rem 1rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      font-size: 0.95rem;
-      transition: background 0.2s;
-    }
-
-    tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
+      font-size: 0.9rem;
     }
 
     tr:last-child td {
       border-bottom: none;
     }
 
-    .btn-danger {
-      background: rgba(239, 68, 68, 0.12);
-      color: #fca5a5;
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      padding: 0.45rem 0.85rem;
-      border-radius: 8px;
+    .badge-time {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      font-family: monospace;
+    }
+
+    .badge-time.in { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .badge-time.lunch { background: rgba(217, 119, 6, 0.15); color: #fbbf24; }
+    .badge-time.out { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+    .action-icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
       cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
+      padding: 0.3rem;
+      border-radius: 6px;
       transition: all 0.2s;
-      display: inline-flex;
+    }
+
+    .action-icon-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
       align-items: center;
-      gap: 0.4rem;
+      justify-content: center;
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
     }
 
-    .btn-danger:hover {
-      background: rgba(239, 68, 68, 0.25);
-      border-color: rgba(239, 68, 68, 0.4);
-      transform: scale(1.02);
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
     }
 
-    /* Toast Notifications */
+    .modal-content {
+      background: #111827;
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      width: 90%;
+      max-width: 520px;
+      padding: 2rem;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    /* Toast */
     #toast {
       position: fixed;
       bottom: 2rem;
@@ -497,10 +726,8 @@
       gap: 0.85rem;
       transform: translateY(100px);
       opacity: 0;
-      transition: all 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      transition: all 0.3s ease;
       z-index: 1000;
-      font-size: 0.95rem;
-      font-weight: 600;
     }
 
     #toast.show {
@@ -508,92 +735,48 @@
       opacity: 1;
     }
 
-    /* Modal Overlay */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 500;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-    }
-
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-content {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      width: 90%;
-      max-width: 480px;
-      padding: 2.25rem;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-      transform: scale(0.95);
-      transition: transform 0.25s ease;
-    }
-
-    .modal-overlay.open .modal-content {
-      transform: scale(1);
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    /* Spinner */
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2.5px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
   <!-- Header -->
   <header>
-    <div class="brand">
+    <div class="brand-group">
       <div class="brand-icon">
-        <i data-feather="clock"></i>
+        <i data-feather="briefcase"></i>
       </div>
-      <span>HorasTrack <span style="font-weight:400; font-size:0.8rem; color:var(--primary);">PRO</span></span>
+      <div class="brand-titles">
+        <h1>Prácticas Profesionales <span class="header-badge">CONTROL DE HORAS</span></h1>
+        <p>Desde el 28 de Agosto hasta la actualidad</p>
+      </div>
     </div>
     
-    <div class="user-pill hidden" id="userPill">
-      <div class="user-name-wrapper">
-        <span class="user-display-name" id="userName">Usuario</span>
-        <span class="role-badge" id="userRoleBadge">Practicante</span>
+    <div class="header-actions">
+      <!-- User Pill -->
+      <div class="user-pill hidden" id="userPill" style="display: flex; align-items: center; gap: 0.75rem; margin-right: 0.5rem;">
+        <span id="userName" style="font-weight: 700; font-size: 0.9rem;">Usuario</span>
+        <span class="header-badge" id="userRoleBadge">Practicante</span>
+        <button class="btn btn-secondary" id="btnLogout" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+          <i data-feather="log-out"></i> Salir
+        </button>
       </div>
-      <button class="btn-secondary" id="btnLogout">
-        <i data-feather="log-out"></i> Salir
+
+      <button class="btn btn-primary" id="btnHeaderRetro">
+        ✨ Rellenar Historial Retroactivo
+      </button>
+      <button class="btn btn-success" id="btnExportExcel">
+        📊 Exportar Excel
+      </button>
+      <button class="btn btn-secondary" id="btnConfigModal" title="Conexión Supabase">
+        <i data-feather="settings"></i>
       </button>
     </div>
-
-    <button class="btn-secondary" id="btnConfigModal">
-      <i data-feather="settings"></i> Conexión Supabase
-    </button>
   </header>
 
   <div class="container">
 
-    <!-- Auth View -->
+    <!-- Auth Section -->
     <div id="authSection" class="auth-card">
       <div class="auth-tabs">
         <button class="auth-tab active" id="tabLogin">Iniciar Sesión</button>
@@ -611,7 +794,7 @@
           <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
           <a class="forgot-link" id="linkForgotPassword">¿Olvidaste tu contraseña?</a>
         </div>
-        <button type="submit" class="btn-primary" id="btnLoginSubmit">
+        <button type="submit" class="btn btn-primary" id="btnLoginSubmit" style="width: 100%;">
           <i data-feather="log-in"></i> Entrar
         </button>
       </form>
@@ -620,7 +803,7 @@
       <form id="formRegister" class="hidden">
         <div class="form-group">
           <label>Nombre Completo</label>
-          <input type="text" id="regName" class="form-control" placeholder="Ej. Juan Pérez" required>
+          <input type="text" id="regName" class="form-control" placeholder="Ej. Oliver Chan" required>
         </div>
         <div class="form-group">
           <label>Correo Electrónico</label>
@@ -633,11 +816,11 @@
         <div class="form-group">
           <label>Tipo de Usuario (Rol)</label>
           <select id="regRole" class="form-control">
-            <option value="practicante">Practicante (Registrar mis horas)</option>
-            <option value="asesor">Asesor Externo (Ver acumulados de practicantes)</option>
+            <option value="practicante">Practicante (Registrar e Historial)</option>
+            <option value="asesor">Asesor Externo (Ver acumulados de práctica)</option>
           </select>
         </div>
-        <button type="submit" class="btn-primary" id="btnRegisterSubmit">
+        <button type="submit" class="btn btn-primary" id="btnRegisterSubmit" style="width: 100%;">
           <i data-feather="user-plus"></i> Crear Cuenta
         </button>
       </form>
@@ -645,119 +828,227 @@
 
     <!-- Practicante Dashboard -->
     <div id="practicanteDashboard" class="hidden">
-      <!-- Stats -->
-      <div class="grid-stats">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i data-feather="clock"></i>
+
+      <!-- Metrics Row -->
+      <div class="metrics-grid">
+        <!-- Metric 1: Progreso Total -->
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Progreso Total de Prácticas</span>
+            <button class="btn-edit-target" id="btnEditTarget">
+              <i data-feather="edit-2" style="width:12px; height:12px;"></i> Ajustar Meta
+            </button>
           </div>
-          <div class="stat-info" style="width: 100%;">
-            <h3 id="statTotalHoursPracticante">0.0 hrs</h3>
-            <p>Total Horas Acumuladas</p>
-            <div class="progress-bar-container">
-              <div class="progress-bar-fill" id="statProgressBar" style="width: 0%;"></div>
+          <div class="metric-main">
+            <span class="metric-value-big" id="statWorkedHours">0.0</span>
+            <span class="metric-sub">/ <span id="statTargetHours">480.0</span> hrs</span>
+            <span class="metric-pill" id="statPercentBadge">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="statProgressBar" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Metric 2: Horas Restantes -->
+        <div class="metric-card">
+          <div class="metric-card-stat">
+            <div>
+              <span class="metric-title">Horas Restantes</span>
+              <div class="metric-main" style="margin-top: 0.5rem;">
+                <span class="metric-value-big" id="statRemainingHours" style="color: #fbbf24;">480.0</span>
+                <span class="metric-sub">h</span>
+              </div>
+            </div>
+            <div class="metric-icon-box" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
+              ⏳
             </div>
           </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(168, 85, 247, 0.15); color: var(--secondary); border-color: rgba(168, 85, 247, 0.2);">
-            <i data-feather="file-text"></i>
-          </div>
-          <div class="stat-info">
-            <h3 id="statTotalLogsPracticante">0</h3>
-            <p>Registros Realizados</p>
+
+        <!-- Metric 3: Días Cumplidos -->
+        <div class="metric-card">
+          <div class="metric-card-stat">
+            <div>
+              <span class="metric-title">Días Cumplidos</span>
+              <div class="metric-main" style="margin-top: 0.5rem;">
+                <span class="metric-value-big" id="statCompletedDays" style="color: #34d399;">0</span>
+                <span class="metric-sub">días</span>
+              </div>
+            </div>
+            <div class="metric-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+              📅
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Form Registrar Horas -->
-      <div class="panel">
-        <div class="panel-title">
-          <i data-feather="plus-circle" style="color: var(--primary);"></i> Registrar Nueva Entrada de Horas
+      <!-- Layout Grid: Left Clock Puncher & Right Quick Tools -->
+      <div class="dashboard-layout">
+
+        <!-- Left: Live Clock & Punching Panel -->
+        <div class="panel-box">
+          <div class="clock-header">
+            <div>
+              <p class="date-display" id="clockDate">JUEVES, 1 DE OCTUBRE DE 2026</p>
+              <h2 class="time-display" id="clockTime">14:45:40</h2>
+            </div>
+            <span class="status-badge-clock" id="clockStatusBadge">Sin jornada activa hoy</span>
+          </div>
+
+          <p style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 0.5rem;">
+            REGISTRO HOY (SINCRONIZADO CON HORA DE COMPUTADORA)
+          </p>
+
+          <!-- Action Punch Cards -->
+          <div class="punch-grid">
+            <div class="punch-card entrada" id="btnPunchEntrada">
+              <i data-feather="play-circle"></i>
+              <span class="punch-title">Marcar Entrada</span>
+              <span class="punch-time" id="lblPunchEntrada">--:--</span>
+            </div>
+            <div class="punch-card almuerzo" id="btnPunchAlmuerzo">
+              <i data-feather="coffee"></i>
+              <span class="punch-title">Inicio Almuerzo</span>
+              <span class="punch-time" id="lblPunchAlmuerzo">--:--</span>
+            </div>
+            <div class="punch-card salida" id="btnPunchSalida">
+              <i data-feather="square"></i>
+              <span class="punch-title">Marcar Salida</span>
+              <span class="punch-time" id="lblPunchSalida">--:--</span>
+            </div>
+          </div>
+
+          <!-- Bottom Day Stats Summary -->
+          <div class="day-stats-row">
+            <div class="day-stat-item">
+              <p>Trabajado Hoy</p>
+              <h4 id="lblTodayHours">00:00</h4>
+            </div>
+            <div class="day-stat-item">
+              <p>Descanso Hoy</p>
+              <h4 id="lblTodayLunch">00:00</h4>
+            </div>
+            <div class="day-stat-item">
+              <p>Extra Hoy (&gt;8h)</p>
+              <h4 id="lblTodayExtra">00:00</h4>
+            </div>
+          </div>
         </div>
-        <form id="formAddHours" style="margin-top: 1.25rem;">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Fecha</label>
-              <input type="date" id="logDate" class="form-control" required>
+
+        <!-- Right: Quick Tools & Backup -->
+        <div class="panel-box">
+          <div class="tools-title">
+            <i data-feather="sliders" style="width:16px; height:16px;"></i> Herramientas Rápidas
+          </div>
+
+          <button class="tool-item-btn" id="btnToolAddIndividual">
+            <span>📅 Añadir/Editar Día Individual</span>
+            <i data-feather="chevron-right"></i>
+          </button>
+
+          <button class="tool-item-btn" id="btnToolGenerarRetro">
+            <span>🪄 Generar Historial (28 Ago - Oct)</span>
+            <i data-feather="chevron-right"></i>
+          </button>
+
+          <!-- Backup Group -->
+          <div class="backup-group">
+            <div class="tools-title" style="margin-bottom: 0.75rem;">
+              Copias de Seguridad
             </div>
-            <div class="form-group">
-              <label>Horas Trabajaas</label>
-              <input type="number" id="logHours" class="form-control" step="0.25" min="0.25" max="24" placeholder="4.0" required>
-            </div>
-            <div class="form-group">
-              <label>Descripción de Actividades</label>
-              <input type="text" id="logDesc" class="form-control" placeholder="Ej. Desarrollo de componentes y pruebas de UI" required>
-            </div>
-            <div class="form-group">
-              <button type="submit" class="btn-primary" id="btnAddHoursSubmit" style="height: 44px;">
-                <i data-feather="check-circle"></i> Guardar
+            <div class="backup-grid">
+              <button class="btn btn-secondary" id="btnBackupJSON" style="font-size:0.8rem; justify-content:center;">
+                📥 Resp. JSON
               </button>
+              <label class="btn btn-secondary" style="font-size:0.8rem; justify-content:center; cursor:pointer;">
+                📤 Rest. JSON
+                <input type="file" id="fileRestoreJSON" accept=".json" class="hidden">
+              </label>
             </div>
+            <button class="btn btn-danger" id="btnClearAllLogs" style="width: 100%; justify-content: center; font-size: 0.8rem;">
+              🗑️ Limpiar Todo el Historial
+            </button>
           </div>
-        </form>
+        </div>
+
       </div>
 
-      <!-- Historial Table -->
-      <div class="panel">
-        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-          <div class="panel-title">
-            <i data-feather="list" style="color: var(--secondary);"></i> Mi Historial de Registros
+      <!-- Main History Table Panel -->
+      <div class="table-panel">
+        <div class="table-header">
+          <div class="table-title">
+            <i data-feather="list" style="color: var(--primary);"></i> Historial Completo de Asistencia
           </div>
-          <input type="text" id="inputSearchLogs" class="form-control" placeholder="🔍 Buscar por descripción..." style="max-width: 250px; padding: 0.45rem 0.85rem; font-size: 0.85rem;">
+          <input type="text" id="inputSearchLogs" class="form-control" placeholder="🔍 Buscar por fecha..." style="max-width: 260px; padding: 0.45rem 0.85rem; font-size: 0.85rem;">
         </div>
+
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
                 <th>Fecha</th>
-                <th>Horas</th>
-                <th>Descripción de Tareas</th>
-                <th style="text-align: right;">Acción</th>
+                <th>Día</th>
+                <th>Entrada</th>
+                <th>Almuerzo</th>
+                <th>Salida</th>
+                <th>Horas Totales</th>
+                <th>Horas Extra</th>
+                <th style="text-align: right;">Acciones</th>
               </tr>
             </thead>
             <tbody id="tablePracticanteBody">
               <tr>
-                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando registros...</td>
+                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando historial...</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
 
     <!-- Asesor Dashboard -->
     <div id="asesorDashboard" class="hidden">
       <!-- Stats Asesor -->
-      <div class="grid-stats">
-        <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.2);">
-            <i data-feather="users"></i>
-          </div>
-          <div class="stat-info">
-            <h3 id="statTotalPracticantes">0</h3>
-            <p>Practicantes Activos</p>
+      <div class="metrics-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="metric-card">
+          <div class="metric-card-stat">
+            <div>
+              <span class="metric-title">Practicantes Registrados</span>
+              <div class="metric-main" style="margin-top:0.5rem;">
+                <span class="metric-value-big" id="statTotalPracticantes">0</span>
+              </div>
+            </div>
+            <div class="metric-icon-box" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+              👥
+            </div>
           </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border-color: rgba(6, 182, 212, 0.2);">
-            <i data-feather="trending-up"></i>
-          </div>
-          <div class="stat-info">
-            <h3 id="statGrandTotalHours">0.0 hrs</h3>
-            <p>Total Acumulado Global</p>
+
+        <div class="metric-card">
+          <div class="metric-card-stat">
+            <div>
+              <span class="metric-title">Total Acumulado Global</span>
+              <div class="metric-main" style="margin-top:0.5rem;">
+                <span class="metric-value-big" id="statGrandTotalHours">0.0</span>
+                <span class="metric-sub">hrs</span>
+              </div>
+            </div>
+            <div class="metric-icon-box" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc;">
+              📊
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Tabla Resumen Asesor -->
-      <div class="panel">
-        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-          <div class="panel-title">
+      <!-- Resumen Asesor Table -->
+      <div class="table-panel">
+        <div class="table-header">
+          <div class="table-title">
             <i data-feather="shield-check" style="color: var(--accent-green);"></i> Resumen de Horas Acumuladas por Practicante
           </div>
-          <span style="font-size: 0.825rem; color: var(--text-muted); background: rgba(255,255,255,0.04); padding: 0.35rem 0.75rem; border-radius: 20px; border: 1px solid var(--card-border);">
-            <i data-feather="lock" style="width: 13px; height: 13px; vertical-align: middle; margin-right: 4px;"></i> Lectura Restringida por RLS
+          <span style="font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 0.3rem 0.75rem; border-radius: 20px;">
+            🔒 Modo lectura restringida (Sin detalle de tareas)
           </span>
         </div>
         <div class="table-responsive">
@@ -765,12 +1056,14 @@
             <thead>
               <tr>
                 <th>Practicante</th>
+                <th>Días Cumplidos</th>
+                <th>Progreso de Meta</th>
                 <th style="text-align: right;">Total Horas Acumuladas</th>
               </tr>
             </thead>
             <tbody id="tableAsesorBody">
               <tr>
-                <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando resumen...</td>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">Cargando datos...</td>
               </tr>
             </tbody>
           </table>
@@ -780,25 +1073,145 @@
 
   </div>
 
-  <!-- Modal Recuperar Contraseña -->
+  <!-- Modal: Rellenar Historial Retroactivo -->
+  <div class="modal-overlay" id="modalRetro">
+    <div class="modal-content">
+      <div class="tools-title" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.5rem;">
+        ✨ Generar Historial Retroactivo
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Genera e inserta automáticamente registros diarios en la base de datos de Supabase desde la fecha de inicio de prácticas hasta hoy.
+      </p>
+      <form id="formGenerarRetro">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Fecha Inicio (Fijo 28 Ago)</label>
+            <input type="date" id="retroStartDate" class="form-control" value="2026-08-28" required>
+          </div>
+          <div class="form-group">
+            <label>Fecha Fin (Hoy)</label>
+            <input type="date" id="retroEndDate" class="form-control" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Hora Entrada</label>
+            <input type="time" id="retroEntry" class="form-control" value="08:00" required>
+          </div>
+          <div class="form-group">
+            <label>Hora Salida</label>
+            <input type="time" id="retroExit" class="form-control" value="17:00" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Inicio Almuerzo</label>
+            <input type="time" id="retroLunchStart" class="form-control" value="12:00" required>
+          </div>
+          <div class="form-group">
+            <label>Fin Almuerzo</label>
+            <input type="time" id="retroLunchEnd" class="form-control" value="13:00" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-main);">
+            <input type="checkbox" id="retroSkipWeekends" checked style="width: 18px; height: 18px;">
+            <span>Omitir fines de semana (Sábados y Domingos)</span>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" id="btnCloseRetro">Cancelar</button>
+          <button type="submit" class="btn btn-primary" style="flex:1.5;" id="btnSubmitRetro">
+            🚀 Generar e Insertar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Añadir / Editar Día Individual -->
+  <div class="modal-overlay" id="modalIndividual">
+    <div class="modal-content">
+      <div class="tools-title" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.5rem;" id="modalIndividualTitle">
+        📅 Añadir / Editar Día Individual
+      </div>
+      <form id="formIndividual">
+        <input type="hidden" id="indivId">
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="indivDate" class="form-control" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Hora Entrada</label>
+            <input type="time" id="indivEntry" class="form-control" value="08:00" required>
+          </div>
+          <div class="form-group">
+            <label>Hora Salida</label>
+            <input type="time" id="indivExit" class="form-control" value="17:00" required>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Inicio Almuerzo</label>
+            <input type="time" id="indivLunchStart" class="form-control" value="12:00" required>
+          </div>
+          <div class="form-group">
+            <label>Fin Almuerzo</label>
+            <input type="time" id="indivLunchEnd" class="form-control" value="13:00" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descripción / Actividades</label>
+          <input type="text" id="indivDesc" class="form-control" placeholder="Ej. Desarrollo de módulos y pruebas de sistema" value="Jornada regular de prácticas">
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" id="btnCloseIndividual">Cancelar</button>
+          <button type="submit" class="btn btn-primary" style="flex:1.5;" id="btnSubmitIndividual">
+            💾 Guardar Registro
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Ajustar Meta -->
+  <div class="modal-overlay" id="modalTarget">
+    <div class="modal-content">
+      <div class="tools-title" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.5rem;">
+        🎯 Ajustar Meta de Horas
+      </div>
+      <form id="formTarget">
+        <div class="form-group">
+          <label>Meta de Horas Totales</label>
+          <input type="number" id="inputTargetHours" class="form-control" value="480.0" step="1" min="1" required>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" style="flex:1;" id="btnCloseTarget">Cancelar</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;" id="btnSubmitTarget">Guardar Meta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Recuperar Contraseña -->
   <div class="modal-overlay" id="forgotModal">
     <div class="modal-content">
-      <div class="panel-title" style="margin-bottom: 0.75rem;">
-        <i data-feather="key" style="color: var(--primary);"></i> Recuperar Contraseña
+      <div class="tools-title" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.5rem;">
+        🔑 Recuperar Contraseña
       </div>
-      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-        Ingresa tu correo electrónico registrado y te enviaremos un enlace seguro para restablecer tu contraseña.
-      </p>
       <form id="formForgotPass">
         <div class="form-group">
           <label>Correo Electrónico</label>
           <input type="email" id="forgotEmail" class="form-control" placeholder="tu@correo.com" required>
         </div>
         <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-          <button type="button" class="btn-secondary" style="flex: 1;" id="btnCloseForgot">Cancelar</button>
-          <button type="submit" class="btn-primary" style="flex: 1;" id="btnForgotSubmit">
-            <i data-feather="send"></i> Enviar Enlace
-          </button>
+          <button type="button" class="btn btn-secondary" style="flex:1;" id="btnCloseForgot">Cancelar</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;" id="btnForgotSubmit">Enviar Enlace</button>
         </div>
       </form>
     </div>
@@ -807,30 +1220,27 @@
   <!-- Modal Config Supabase -->
   <div class="modal-overlay" id="configModal">
     <div class="modal-content">
-      <div class="panel-title" style="margin-bottom: 0.75rem;">
-        <i data-feather="settings"></i> Configurar Credenciales Supabase
+      <div class="tools-title" style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 0.5rem;">
+        ⚙️ Configurar Credenciales Supabase
       </div>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-        Las credenciales actuales provienen de tu proyecto de Supabase activo. Puedes actualizarlas aquí en cualquier momento.
-      </p>
       <form id="formConfigSupabase">
         <div class="form-group">
           <label>Supabase Project URL</label>
-          <input type="url" id="cfgUrl" class="form-control" placeholder="https://xxxx.supabase.co" required>
+          <input type="url" id="cfgUrl" class="form-control" required>
         </div>
         <div class="form-group">
-          <label>Supabase Anon / Public Key</label>
-          <input type="text" id="cfgKey" class="form-control" placeholder="eyJhbGciOi..." required>
+          <label>Supabase Anon Key</label>
+          <input type="text" id="cfgKey" class="form-control" required>
         </div>
         <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-          <button type="button" class="btn-secondary" style="flex: 1;" id="btnCloseConfig">Cancelar</button>
-          <button type="submit" class="btn-primary" style="flex: 1;">Guardar y Conectar</button>
+          <button type="button" class="btn btn-secondary" style="flex:1;" id="btnCloseConfig">Cancelar</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;">Guardar y Conectar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Toast -->
+  <!-- Toast Notification -->
   <div id="toast">
     <i data-feather="info" id="toastIcon"></i>
     <span id="toastMessage">Notificación</span>

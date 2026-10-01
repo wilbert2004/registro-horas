@@ -1,34 +1,42 @@
 -- ========================================================
--- SCRIPT DE CONFIGURACIÓN SUPABASE - REGISTRO DE HORAS (RBAC)
+-- SCRIPT DE CONFIGURACIÓN Y MIGRACIÓN SUPABASE - HORASA TRACK PRO
 -- ========================================================
--- Ejecuta este script en el Editor SQL de tu proyecto Supabase.
 
--- 1. Tabla de Perfiles de Usuario
+-- 1. Tabla de Perfiles
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   full_name TEXT NOT NULL,
   role TEXT CHECK (role IN ('practicante', 'asesor')) NOT NULL DEFAULT 'practicante',
+  target_hours NUMERIC(6,2) DEFAULT 480.0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Habilitar Row Level Security (RLS) en profiles
+-- Agregar columna target_hours a profiles si no existe
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS target_hours NUMERIC(6,2) DEFAULT 480.0;
+
+-- Habilitar RLS en profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Política RLS: Los usuarios leen únicamente su propio perfil
 DROP POLICY IF EXISTS "Usuarios leen su propio perfil" ON public.profiles;
 CREATE POLICY "Usuarios leen su propio perfil" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
 
--- 2. Trigger de creación automática de perfil tras el registro en Auth
+DROP POLICY IF EXISTS "Usuarios actualizan su propio perfil" ON public.profiles;
+CREATE POLICY "Usuarios actualizan su propio perfil" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- 2. Trigger para nuevos usuarios
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, role)
+  INSERT INTO public.profiles (id, full_name, role, target_hours)
   VALUES (
     new.id, 
     COALESCE(new.raw_user_meta_data->>'full_name', new.email),
-    COALESCE(new.raw_user_meta_data->>'role', 'practicante')
-  );
+    COALESCE(new.raw_user_meta_data->>'role', 'practicante'),
+    480.0
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -39,20 +47,32 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 
--- 3. Tabla de Registro de Horas
+-- 3. Tabla de Registros de Horas (time_logs) con soporte para marcas de tiempo
 CREATE TABLE IF NOT EXISTS public.time_logs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   date DATE NOT NULL DEFAULT CURRENT_DATE,
-  hours NUMERIC(5,2) NOT NULL CHECK (hours > 0),
+  entry_time TIME,
+  lunch_start TIME,
+  lunch_end TIME,
+  exit_time TIME,
+  hours NUMERIC(5,2) NOT NULL DEFAULT 0 CHECK (hours >= 0),
+  extra_hours NUMERIC(4,2) DEFAULT 0,
   description TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_user_date UNIQUE (user_id, date)
 );
 
--- Habilitar Row Level Security (RLS) en time_logs
+-- Agregar columnas necesarias si la tabla ya existía
+ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS entry_time TIME;
+ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS lunch_start TIME;
+ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS lunch_end TIME;
+ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS exit_time TIME;
+ALTER TABLE public.time_logs ADD COLUMN IF NOT EXISTS extra_hours NUMERIC(4,2) DEFAULT 0;
+
+-- Habilitar RLS en time_logs
 ALTER TABLE public.time_logs ENABLE ROW LEVEL SECURITY;
 
--- Políticas RLS para time_logs (Solo el propio Practicante puede interactuar con sus registros)
 DROP POLICY IF EXISTS "Practicantes leen sus propias horas" ON public.time_logs;
 CREATE POLICY "Practicantes leen sus propias horas" ON public.time_logs
   FOR SELECT USING (auth.uid() = user_id);
@@ -70,18 +90,20 @@ CREATE POLICY "Practicantes eliminan sus propias horas" ON public.time_logs
   FOR DELETE USING (auth.uid() = user_id);
 
 
--- 4. Función RPC Segura para el Rol de Asesor (Suma de horas por practicante sin detalles)
+-- 4. Función RPC Segura para el Rol de Asesor
+DROP FUNCTION IF EXISTS public.get_totals_per_practicante();
 CREATE OR REPLACE FUNCTION public.get_totals_per_practicante()
 RETURNS TABLE (
   practicante_id UUID,
   full_name TEXT,
-  total_hours NUMERIC
+  total_hours NUMERIC,
+  completed_days BIGINT,
+  target_hours NUMERIC
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  -- Verificar que el usuario que ejecuta la función sea un Asesor
   IF EXISTS (
     SELECT 1 FROM public.profiles 
     WHERE id = auth.uid() AND role = 'asesor'
@@ -90,14 +112,16 @@ BEGIN
       SELECT 
         p.id AS practicante_id,
         p.full_name,
-        COALESCE(SUM(t.hours), 0) AS total_hours
+        COALESCE(SUM(t.hours), 0) AS total_hours,
+        COUNT(DISTINCT t.date) FILTER (WHERE t.hours > 0) AS completed_days,
+        COALESCE(p.target_hours, 480.0) AS target_hours
       FROM public.profiles p
       LEFT JOIN public.time_logs t ON p.id = t.user_id
       WHERE p.role = 'practicante'
-      GROUP BY p.id, p.full_name
+      GROUP BY p.id, p.full_name, p.target_hours
       ORDER BY total_hours DESC;
   ELSE
-    RAISE EXCEPTION 'Acceso denegado: solo usuarios con rol de asesor pueden consultar este resumen.';
+    RAISE EXCEPTION 'Acceso denegado: se requiere rol de asesor.';
   END IF;
 END;
 $$;
